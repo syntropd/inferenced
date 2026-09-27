@@ -12,7 +12,7 @@ ListenStream=/run/syntrop/sentry.sock
 SocketMode=0660
 SocketGroup=sentry
 
-# File Descriptor 5: Local OpenAI/Ollama gateway socket
+# File Descriptor 5: Local OpenAI-compatible gateway socket
 ListenStream=/run/syntrop/gateway.sock
 SocketMode=0660
 SocketGroup=syntrop

@@ -14,7 +14,7 @@
 
 ## The Problem: AI Workload Chaos on Linux
 
-Modern AI inference engines (Ollama, llama.cpp, vLLM, InvokeAI, Whisper) operate as unmanaged, greedy userland processes:
+Modern AI inference engines (llama.cpp, vLLM, InvokeAI, Whisper) operate as unmanaged, greedy userland processes:
 1. **Memory Contention & OOMs**: Runtimes pre-allocate entire VRAM or host memory pools up front, colliding with peer daemons and crashing with CUDA out-of-memory errors.
 2. **Unified Memory Bus Starvation**: On integrated APUs and SoCs (AMD Ryzen AI, Intel Core Ultra, Apple/ARM), model execution consumes 80–120 GB/s across the shared memory bus, starving the desktop compositor, audio server, and core system daemons.
 3. **Supervisory Blindness**: When an AI daemon locks up a GPU or host memory, system supervisory daemons like **[systemd-sentry](https://github.com/UberMetroid/systemd-sentry)** cannot diagnose the failure if they rely on the same hung compute plane.

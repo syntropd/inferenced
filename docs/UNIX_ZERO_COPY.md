@@ -13,7 +13,7 @@ Rather than copying gigabytes of neural weights across userland processes or dup
    SCM_RIGHTS fd                                                 |
          v                                                       |
  [ Client Inference Engine ]  ==== mmap(PROT_READ) ==============+
-   (Ollama / llama.cpp)
+   (runtimed / llama.cpp)
 ```
 
 1. **Weight Staging**: Model tensors are loaded into an anonymous, in-memory file descriptor via `memfd_create(2)` with `MFD_ALLOW_SEALING | MFD_CLOEXEC`.

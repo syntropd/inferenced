@@ -51,61 +51,6 @@ async fn test_gateway_health_endpoint() {
 }
 
 #[tokio::test]
-async fn test_gateway_ollama_generate_streaming_and_non_streaming() {
-    let state = make_test_state();
-    let app = build_gateway_router(state);
-
-    // 1. Non-streaming
-    let req_non_stream = Request::builder()
-        .method("POST")
-        .uri("/api/generate")
-        .header("content-type", "application/json")
-        .body(Body::from(
-            serde_json::to_vec(&serde_json::json!({
-                "model": "qwen2.5-coder:7b",
-                "prompt": "write hello world",
-                "stream": false
-            }))
-            .unwrap(),
-        ))
-        .unwrap();
-
-    let resp = app.clone().oneshot(req_non_stream).await.unwrap();
-    assert_eq!(resp.status(), StatusCode::OK);
-    let bytes = resp.into_body().collect().await.unwrap().to_bytes();
-    let json: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
-    assert_eq!(json["model"], "qwen2.5-coder:7b");
-    assert_eq!(json["done"], true);
-
-    // 2. Streaming
-    let req_stream = Request::builder()
-        .method("POST")
-        .uri("/api/generate")
-        .header("content-type", "application/json")
-        .body(Body::from(
-            serde_json::to_vec(&serde_json::json!({
-                "model": "qwen2.5-coder:7b",
-                "prompt": "write hello world",
-                "stream": true
-            }))
-            .unwrap(),
-        ))
-        .unwrap();
-
-    let resp = app.oneshot(req_stream).await.unwrap();
-    assert_eq!(resp.status(), StatusCode::OK);
-    let content_type = resp.headers().get("content-type").unwrap().to_str().unwrap();
-    assert!(content_type.contains("ndjson"));
-
-    let bytes = resp.into_body().collect().await.unwrap().to_bytes();
-    let body_str = String::from_utf8_lossy(&bytes);
-    let lines: Vec<&str> = body_str.trim().lines().collect();
-    assert!(lines.len() >= 2, "Must produce multiple streaming NDJSON chunks");
-    let last_chunk: serde_json::Value = serde_json::from_str(lines.last().unwrap()).unwrap();
-    assert_eq!(last_chunk["done"], true);
-}
-
-#[tokio::test]
 async fn test_gateway_serve_unix_socket_roundtrip() {
     let dir = tempfile::tempdir().unwrap();
     let sock_path = dir.path().join("gateway_test.sock");

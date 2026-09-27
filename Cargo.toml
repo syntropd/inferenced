@@ -8,7 +8,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 rust-version = "1.80"
 license = "Apache-2.0"
@@ -17,7 +17,7 @@ repository = "https://github.com/syntropd/inferenced"
 
 [workspace.dependencies]
 # Internal workspace crates
-inferenced-core = { package = "syntrop-inferenced-core", version = "0.3.0", path = "crates/inferenced-core" }
+inferenced-core = { package = "syntrop-inferenced-core", version = "0.3.1", path = "crates/inferenced-core" }
 
 
 # Pure Rust async runtime & Linux system interfaces (zero libsystemd.so)
@@ -42,7 +42,7 @@ chrono = { version = "0.4", features = ["serde"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 
-# HTTP & Gateway Proxy (OpenAI / Ollama wire protocol)
+# HTTP & Gateway Proxy (OpenAI wire protocol)
 hyper = { version = "1.4", features = ["full"] }
 hyper-util = { version = "0.1", features = ["full"] }
 http-body-util = "0.1"

@@ -34,7 +34,7 @@ The daemon uses pure Rust (`rustix`) to adopt pre-bound file descriptors passed 
 |-----------------|-------------|----------------|---------|
 | `FD 3` | `AF_UNIX` Stream | `/run/systemd-inferenced/io.systemd.inferenced1` | Native Varlink IPC |
 | `FD 4` | `AF_UNIX` Stream | `/run/systemd-inferenced/sentry.sock` | Sentry Emergency Triage |
-| `FD 5` | `AF_UNIX` Stream | `/run/syntrop/gateway.sock` | OpenAI/Ollama HTTP Gateway |
+| `FD 5` | `AF_UNIX` Stream | `/run/syntrop/gateway.sock` | OpenAI-compatible HTTP Gateway |
 
 This ensures the daemon starts instantaneously on incoming requests with zero port collisions.
 
