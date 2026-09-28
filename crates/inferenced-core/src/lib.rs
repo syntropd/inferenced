@@ -1,22 +1,23 @@
 //! inferenced-core: Core hardware discovery, compute plane topology,
 //! and resource scheduling primitives for systemd-inferenced.
 
-pub mod arbiter;
 pub mod error;
 pub mod fd_lease;
-pub mod freezer;
 pub mod lease;
-pub mod madvise;
 pub mod model;
 pub mod netlink;
-pub mod paging;
 pub mod peer;
-pub mod preempt;
 pub mod psi;
+pub mod reclaim;
+pub mod schedule;
 pub mod topology;
 
 #[cfg(test)]
 mod tests;
+
+// Regrouped pages keep their crate-root paths, so callers are untouched.
+pub use reclaim::{freezer, madvise, paging};
+pub use schedule::{arbiter, preempt};
 
 pub use arbiter::{Arbiter, ArbiterState, LeaseError, LeaseGrant, LeaseRequest};
 pub use error::{Error, Result};

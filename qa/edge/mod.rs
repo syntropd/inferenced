@@ -7,21 +7,10 @@ use inferenced_core::{
 use std::io::Write;
 use tempfile::NamedTempFile;
 
-mod boundary_limits;
-mod challenger_preempt;
-mod challenger_r3_psi_uma_stress;
-mod challenger_r3_scm_rogue_stress;
-mod challenger_stream_paging;
-mod cli_edge;
-mod corrupt_inputs;
-mod dead_client_reclaim;
-mod preemption_storm;
-mod psi_churn_stress_tests;
-mod rogue_disconnect_tests;
-mod scm_rights_fanout_tests;
-mod sentry_stress;
-mod socket_faults;
-mod uma_thaw_storm_tests;
+mod faults;
+mod reclaim;
+mod stress;
+mod transport;
 
 
 #[tokio::test]

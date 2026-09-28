@@ -244,3 +244,8 @@ async fn test_interaction_uma_preempt_thaw_and_release_lifecycle() {
     assert_eq!(t_final.planes[0].available_memory_bytes, total_bytes);
     assert_eq!(t_final.planes[1].available_memory_bytes, total_bytes);
 }
+
+#[test]
+fn test_integration_suite_sanity_check() {
+    assert!(true, "Integration test harness initialized successfully");
+}

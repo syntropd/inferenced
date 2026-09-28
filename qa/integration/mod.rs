@@ -8,8 +8,3 @@ mod scenario_panic_triage;
 mod scenario_psi_paging;
 mod scenario_varlink_mgmt;
 mod scenario_multitenant;
-
-#[test]
-fn test_integration_suite_sanity_check() {
-    assert!(true, "Integration test harness initialized successfully");
-}

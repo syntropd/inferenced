@@ -10,15 +10,13 @@ use std::io::Write;
 use std::path::PathBuf;
 use tempfile::NamedTempFile;
 
-mod activation_tests;
 mod cli_tests;
+mod daemon;
 mod discovery_tests;
 mod fd_tests;
 mod freezer_tests;
 mod madvise_tests;
-mod notify_tests;
 mod preempt_tests;
-mod sentry_tests;
 mod varlink_tests;
 
 #[test]
