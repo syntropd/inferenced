@@ -1,6 +1,6 @@
 {
  "repo": "inferenced",
- "rev": "8ae23d4",
+ "rev": "261ea6a",
  "dirty": true,
  "pages": [
   {
@@ -19,7 +19,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/lease/composite.rs",
-   "lines": 103,
+   "lines": 107,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 2
@@ -117,7 +117,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/schedule/gang_scheduler.rs",
-   "lines": 209,
+   "lines": 231,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 1
@@ -341,14 +341,14 @@
   },
   {
    "path": "./crates/inferenced-daemon/src/varlink/inferenced1.rs",
-   "lines": 153,
+   "lines": 155,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 1
   },
   {
    "path": "./crates/inferenced-daemon/src/varlink/interface_descriptions.rs",
-   "lines": 243,
+   "lines": 245,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 1
@@ -397,7 +397,7 @@
   },
   {
    "path": "./crates/inferenced-daemon/src/varlink/tests/mod.rs",
-   "lines": 233,
+   "lines": 235,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0

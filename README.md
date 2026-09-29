@@ -26,6 +26,7 @@ Modern AI inference engines (llama.cpp, vLLM, InvokeAI, Whisper) operate as unma
 `systemd-inferenced` serves as an intelligent system gateway and resource broker:
 
 * **Heterogeneous Hardware Topology**: Automatically enumerates discrete GPUs (`/dev/dri/renderD*`), NPUs (`/dev/accel/*`, Hailo, Coral), and CPU matrix extensions (Intel AMX, AVX-512 VNNI, ARM SME/SVE2).
+* **Heterogeneous Speculative Scheduling**: Gang-schedules draft models (`PlaneRole::Draft`) onto energy-efficient CPU-host matrix extensions while assigning target models (`PlaneRole::Target`) to high-throughput discrete GPU/NPU planes.
 * **Dynamic Demand Paging & Socket Activation**: Keeps heavy inference engines dormant (`InactiveExitStatus=0`) until an active socket connection requests a model lease.
 * **cgroups v2 & PSI Enforcement**: Throttles or pauses batch workloads when Linux kernel Pressure Stall Information (PSI) signals bus or memory saturation.
 * **`systemd-sentry` Emergency Triage Core**: Reserves and pins an out-of-band, low-latency compute slice (on NPU or dedicated CPU-AMX cores) specifically for `systemd-sentry`, ensuring crash diagnosis remains available even during discrete GPU driver deadlocks.

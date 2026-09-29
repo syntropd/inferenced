@@ -4,7 +4,7 @@ use crate::error::{Error, Result};
 use crate::freezer::{freeze_cgroup, send_cooperative_yield_signal};
 use crate::lease::{
     CompositeLease, CompositeLeaseRequest, ComputeLease, GangPolicy, LeaseId, LeasePriority,
-    LeaseState, PlaneSliceAllocation,
+    LeaseState, PlaneRole, PlaneSliceAllocation,
 };
 use crate::topology::affinity::gang_affinity_score;
 use crate::topology::{ComputePlane, ComputePlaneKind, HardwareTopology};
@@ -124,6 +124,26 @@ pub fn allocate_single(
     Ok(lease)
 }
 
+pub fn select_plane_for_role(
+    topology: &HardwareTopology,
+    role: PlaneRole,
+    selected: &[usize],
+) -> Option<usize> {
+    match role {
+        PlaneRole::Draft => topology.planes.iter().enumerate().position(|(i, p)| {
+            !p.is_quarantined
+                && !selected.contains(&i)
+                && (p.id == "cpu-host" || p.id.contains("cpu") || p.kind == ComputePlaneKind::CpuMatrixExtension)
+        }),
+        PlaneRole::Target => topology.planes.iter().enumerate().position(|(i, p)| {
+            !p.is_quarantined
+                && !selected.contains(&i)
+                && (p.id.contains("drm-renderD128") || p.id.contains("renderD128") || p.id.contains("gpu") || p.kind == ComputePlaneKind::DiscreteGpu || p.kind == ComputePlaneKind::IntegratedUma)
+        }),
+        _ => None,
+    }
+}
+
 pub fn allocate_gang(
     topology: &mut HardwareTopology, leases: &mut HashMap<LeaseId, ComputeLease>,
     composite_leases: &mut HashMap<LeaseId, CompositeLease>, req: CompositeLeaseRequest,
@@ -133,6 +153,8 @@ pub fn allocate_gang(
         let idx = if let Some(ref pref) = slice.preferred_plane {
             topology.planes.iter().position(|p| &p.id == pref)
                 .ok_or_else(|| Error::PlaneNotFound(pref.clone()))?
+        } else if let Some(role_idx) = select_plane_for_role(topology, slice.role, &selected_indices) {
+            role_idx
         } else {
             let mut candidates: Vec<usize> = topology.planes.iter().enumerate()
                 .filter(|(i, p)| !p.is_quarantined && !selected_indices.contains(i))

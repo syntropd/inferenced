@@ -14,6 +14,8 @@ pub enum PlaneRole {
     Backbone,
     Head,
     Rank(u32),
+    Draft,
+    Target,
 }
 
 impl std::fmt::Display for PlaneRole {
@@ -25,6 +27,8 @@ impl std::fmt::Display for PlaneRole {
             Self::Backbone => write!(f, "backbone"),
             Self::Head => write!(f, "head"),
             Self::Rank(r) => write!(f, "rank-{}", r),
+            Self::Draft => write!(f, "draft"),
+            Self::Target => write!(f, "target"),
         }
     }
 }
