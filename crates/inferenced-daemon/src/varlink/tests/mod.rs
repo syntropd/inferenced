@@ -19,7 +19,7 @@ fn make_test_topo() -> HardwareTopology {
         supported_formats: vec![],
         is_triage_reserved: false,
         is_quarantined: false,
-        hardware_features: vec![],
+        hardware_features: vec!["vulkan".into()],
     });
     topo.total_system_ram_bytes = 32 * 1024 * 1024 * 1024;
     topo.available_system_ram_bytes = 16 * 1024 * 1024 * 1024;
@@ -89,6 +89,7 @@ async fn test_varlink_server_get_status_and_list_planes() {
     let planes = planes_resp["parameters"]["planes"].as_array().unwrap();
     assert_eq!(planes.len(), 1);
     assert_eq!(planes[0]["id"], "plane-varlink-test");
+    assert_eq!(planes[0]["features"], json!(["vulkan"]));
 
     // 5. AcquireLease & ReleaseLease
     let acq_resp = varlink_call(
@@ -218,6 +219,7 @@ async fn test_varlink_server_io_syntrop_inference1_telemetry_and_pressure() {
     let planes = topo_params["planes"].as_array().unwrap();
     assert_eq!(planes.len(), 1);
     assert_eq!(planes[0]["id"], "plane-varlink-test");
+    assert_eq!(planes[0]["features"], json!(["vulkan"]));
     assert!(topo_params["total_ram"].as_u64().unwrap() > 0);
     assert!(topo_params["cpu_cores"].as_u64().unwrap() > 0);
 
