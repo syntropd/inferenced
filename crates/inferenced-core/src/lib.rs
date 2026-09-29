@@ -17,7 +17,7 @@ mod tests;
 
 // Regrouped pages keep their crate-root paths, so callers are untouched.
 pub use reclaim::{freezer, madvise, paging};
-pub use schedule::{arbiter, preempt};
+pub use schedule::{arbiter, gang_scheduler, preempt};
 
 pub use arbiter::{Arbiter, ArbiterState, LeaseError, LeaseGrant, LeaseRequest};
 pub use error::{Error, Result};
@@ -26,7 +26,10 @@ pub use freezer::{
     freeze_cgroup, freeze_process_signal, is_cgroup_frozen, send_cooperative_yield_signal,
     signal_process, thaw_cgroup, thaw_process_signal, FreezeState,
 };
-pub use lease::{ComputeLease, LeaseId, LeasePriority, LeaseState};
+pub use lease::{
+    CompositeLease, CompositeLeaseRequest, ComputeLease, GangPolicy, LeaseId, LeasePriority,
+    LeaseState, PlaneRole, PlaneSliceAllocation, SliceRequirement,
+};
 pub use madvise::{
     advise_dontneed, advise_hugepage, advise_random, advise_sequential, advise_willneed,
 };

@@ -1,3 +1,4 @@
+use super::composite_leases;
 use super::leases;
 use super::models;
 use super::protocol::VarlinkReply;
@@ -27,13 +28,20 @@ pub async fn handle_method(
         "AcquireLease" => {
             Some(leases::handle_acquire_lease(params, arbiter, active_leases, peer_info).await)
         }
+        "AcquireCompositeLease" => {
+            Some(composite_leases::handle_acquire_composite_lease(params, arbiter, active_leases, peer_info).await)
+        }
         "ReleaseLease" => {
             Some(leases::handle_release_lease(params, arbiter, active_leases).await)
+        }
+        "ReleaseCompositeLease" => {
+            Some(composite_leases::handle_release_composite_lease(params, arbiter, active_leases).await)
         }
         "Yield" => Some(leases::handle_yield(params, arbiter).await),
         "Freeze" | "FreezeLease" => Some(leases::handle_freeze(params, arbiter).await),
         "Thaw" | "ThawLease" => Some(leases::handle_thaw(params, arbiter).await),
         "ListLeases" => Some(leases::handle_list_leases(arbiter).await),
+        "ListCompositeLeases" => Some(composite_leases::handle_list_composite_leases(arbiter).await),
         "ListModels" => Some(models::handle_list_models(arbiter).await),
         "RegisterModel" => {
             Some(models::handle_register_model(params, arbiter).await)

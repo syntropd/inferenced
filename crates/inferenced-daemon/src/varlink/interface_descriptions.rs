@@ -88,6 +88,10 @@ method AcquireLease(
   allocated_memory: int
 )
 
+type SliceReq (role: string, memory_bytes: int, plane: ?string)
+type SliceAlloc (plane_id: string, role: string, allocated_memory: int, numa_node: ?int)
+method AcquireCompositeLease(priority: string, policy: ?string, slices: []SliceReq, unit: ?string, pid: ?int) -> (lease_id: string, slices: []SliceAlloc, priority: string, policy: string)
+method ReleaseCompositeLease(lease_id: string) -> ()
 method ReleaseLease(lease_id: string) -> ()
 method Yield(lease_id: string) -> ()
 method Freeze(lease_id: string) -> ()
@@ -188,6 +192,10 @@ method AcquireLease(
   allocated_memory: int
 )
 
+type SliceReq (role: string, memory_bytes: int, plane: ?string)
+type SliceAlloc (plane_id: string, role: string, allocated_memory: int, numa_node: ?int)
+method AcquireCompositeLease(priority: string, policy: ?string, slices: []SliceReq, unit: ?string, pid: ?int) -> (lease_id: string, slices: []SliceAlloc, priority: string, policy: string)
+method ReleaseCompositeLease(lease_id: string) -> ()
 method ReleaseLease(lease_id: string) -> ()
 method Yield(lease_id: string) -> ()
 method Freeze(lease_id: string) -> ()
@@ -228,6 +236,8 @@ mod tests {
     fn idl_names_its_interface() {
         assert!(ORG_VARLINK_SERVICE_IDL.contains("interface org.varlink.service"));
         assert!(IO_SYNTROP_INFERENCE1_IDL.contains("interface io.syntrop.Inference1"));
+        assert!(IO_SYNTROP_INFERENCE1_IDL.contains("AcquireCompositeLease"));
         assert!(IO_SYSTEMD_INFERENCED1_IDL.contains("interface io.systemd.inferenced1"));
+        assert!(IO_SYSTEMD_INFERENCED1_IDL.contains("AcquireCompositeLease"));
     }
 }

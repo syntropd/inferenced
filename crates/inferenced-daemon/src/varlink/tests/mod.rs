@@ -1,4 +1,5 @@
 use super::*;
+mod composite_tests;
 use inferenced_core::topology::{ComputePlane, ComputePlaneKind, HardwareTopology};
 use serde_json::{json, Value};
 use tempfile::tempdir;
@@ -230,4 +231,3 @@ async fn test_varlink_server_io_syntrop_inference1_telemetry_and_pressure() {
     assert_eq!(status_resp["parameters"]["status"], "active");
     assert!(status_resp["parameters"]["pressure"].is_string());
 }
-

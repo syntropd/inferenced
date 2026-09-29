@@ -1,3 +1,4 @@
+pub mod affinity;
 pub mod cpu;
 pub mod drm;
 pub mod npu;
@@ -5,6 +6,7 @@ pub mod pstore;
 pub mod triage;
 pub mod types;
 
+pub use affinity::{gang_affinity_score, numa_distance, pcie_hop_distance, topology_distance};
 pub use types::{ComputePlane, ComputePlaneKind, HardwareTopology};
 
 use crate::error::Result;

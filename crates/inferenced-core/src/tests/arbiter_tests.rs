@@ -134,3 +134,69 @@ async fn test_release_nonexistent_lease_returns_error() {
     let res = arbiter.release_lease(LeaseId::default()).await;
     assert!(res.is_err());
 }
+
+#[tokio::test]
+async fn test_composite_gang_atomic_allocation() {
+    use crate::lease::{CompositeLeaseRequest, GangPolicy, PlaneRole, SliceRequirement};
+    let mut topo = HardwareTopology::default();
+    topo.planes.push(ComputePlane {
+        id: "gpu-gang-0".into(),
+        name: "GPU 0".into(),
+        kind: ComputePlaneKind::DiscreteGpu,
+        device_path: None,
+        total_memory_bytes: 4 * 1024 * 1024 * 1024,
+        available_memory_bytes: 4 * 1024 * 1024 * 1024,
+        numa_node: Some(0),
+        supported_formats: vec!["FP16".into()],
+        is_triage_reserved: false,
+        is_quarantined: false,
+        hardware_features: vec![],
+    });
+    topo.planes.push(ComputePlane {
+        id: "gpu-gang-1".into(),
+        name: "GPU 1".into(),
+        kind: ComputePlaneKind::DiscreteGpu,
+        device_path: None,
+        total_memory_bytes: 4 * 1024 * 1024 * 1024,
+        available_memory_bytes: 4 * 1024 * 1024 * 1024,
+        numa_node: Some(0),
+        supported_formats: vec!["FP16".into()],
+        is_triage_reserved: false,
+        is_quarantined: false,
+        hardware_features: vec![],
+    });
+
+    let arbiter = Arbiter::new(topo);
+    let gang_req = CompositeLeaseRequest {
+        priority: LeasePriority::Interactive,
+        slices: vec![
+            SliceRequirement {
+                role: PlaneRole::Primary,
+                required_bytes: 2 * 1024 * 1024 * 1024,
+                preferred_plane: Some("gpu-gang-0".into()),
+            },
+            SliceRequirement {
+                role: PlaneRole::Worker,
+                required_bytes: 2 * 1024 * 1024 * 1024,
+                preferred_plane: Some("gpu-gang-1".into()),
+            },
+        ],
+        policy: GangPolicy::AllOrNothing,
+        client_unit: Some("gang.service".into()),
+        client_pid: Some(9999),
+    };
+
+    let gang_lease = arbiter.acquire_composite_lease(gang_req).await.unwrap();
+    assert_eq!(gang_lease.slices.len(), 2);
+    assert_eq!(gang_lease.total_allocated_memory_bytes(), 4 * 1024 * 1024 * 1024);
+
+    let t = arbiter.get_topology().await;
+    assert_eq!(t.planes[0].available_memory_bytes, 2 * 1024 * 1024 * 1024);
+    assert_eq!(t.planes[1].available_memory_bytes, 2 * 1024 * 1024 * 1024);
+
+    arbiter.release_composite_lease(gang_lease.id).await.unwrap();
+    let t2 = arbiter.get_topology().await;
+    assert_eq!(t2.planes[0].available_memory_bytes, 4 * 1024 * 1024 * 1024);
+    assert_eq!(t2.planes[1].available_memory_bytes, 4 * 1024 * 1024 * 1024);
+}
+

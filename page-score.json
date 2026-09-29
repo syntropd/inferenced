@@ -1,32 +1,53 @@
 {
  "repo": "inferenced",
- "rev": "204fcae",
+ "rev": "8ae23d4",
  "dirty": true,
  "pages": [
   {
    "path": "./crates/inferenced-core/src/error.rs",
    "lines": 55,
-   "bin_bytes": 3080,
+   "bin_bytes": null,
    "heat_pct": null,
-   "reach": 16
+   "reach": 17
   },
   {
    "path": "./crates/inferenced-core/src/fd_lease.rs",
    "lines": 161,
-   "bin_bytes": 1858,
+   "bin_bytes": null,
    "heat_pct": null,
    "reach": 14
   },
   {
-   "path": "./crates/inferenced-core/src/lease.rs",
-   "lines": 90,
-   "bin_bytes": 1198,
+   "path": "./crates/inferenced-core/src/lease/composite.rs",
+   "lines": 103,
+   "bin_bytes": null,
    "heat_pct": null,
-   "reach": 33
+   "reach": 2
+  },
+  {
+   "path": "./crates/inferenced-core/src/lease/mod.rs",
+   "lines": 21,
+   "bin_bytes": null,
+   "heat_pct": null,
+   "reach": 0
+  },
+  {
+   "path": "./crates/inferenced-core/src/lease/request.rs",
+   "lines": 52,
+   "bin_bytes": null,
+   "heat_pct": null,
+   "reach": 1
+  },
+  {
+   "path": "./crates/inferenced-core/src/lease/single.rs",
+   "lines": 82,
+   "bin_bytes": null,
+   "heat_pct": null,
+   "reach": 3
   },
   {
    "path": "./crates/inferenced-core/src/lib.rs",
-   "lines": 42,
+   "lines": 45,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -34,42 +55,42 @@
   {
    "path": "./crates/inferenced-core/src/model.rs",
    "lines": 140,
-   "bin_bytes": 2343,
+   "bin_bytes": null,
    "heat_pct": null,
    "reach": 7
   },
   {
    "path": "./crates/inferenced-core/src/netlink.rs",
    "lines": 159,
-   "bin_bytes": 4072,
+   "bin_bytes": null,
    "heat_pct": null,
    "reach": 1
   },
   {
    "path": "./crates/inferenced-core/src/peer.rs",
    "lines": 139,
-   "bin_bytes": 2330,
+   "bin_bytes": null,
    "heat_pct": null,
    "reach": 1
   },
   {
    "path": "./crates/inferenced-core/src/psi.rs",
    "lines": 121,
-   "bin_bytes": 2665,
+   "bin_bytes": null,
    "heat_pct": null,
    "reach": 9
   },
   {
    "path": "./crates/inferenced-core/src/reclaim/freezer.rs",
    "lines": 100,
-   "bin_bytes": 4776,
+   "bin_bytes": null,
    "heat_pct": null,
    "reach": 6
   },
   {
    "path": "./crates/inferenced-core/src/reclaim/madvise.rs",
    "lines": 67,
-   "bin_bytes": 1326,
+   "bin_bytes": null,
    "heat_pct": null,
    "reach": 8
   },
@@ -83,20 +104,27 @@
   {
    "path": "./crates/inferenced-core/src/reclaim/paging.rs",
    "lines": 165,
-   "bin_bytes": 3073,
+   "bin_bytes": null,
    "heat_pct": null,
    "reach": 4
   },
   {
    "path": "./crates/inferenced-core/src/schedule/arbiter.rs",
-   "lines": 251,
-   "bin_bytes": 1790,
+   "lines": 209,
+   "bin_bytes": null,
    "heat_pct": null,
-   "reach": 37
+   "reach": 40
+  },
+  {
+   "path": "./crates/inferenced-core/src/schedule/gang_scheduler.rs",
+   "lines": 209,
+   "bin_bytes": null,
+   "heat_pct": null,
+   "reach": 1
   },
   {
    "path": "./crates/inferenced-core/src/schedule/mod.rs",
-   "lines": 4,
+   "lines": 5,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -104,20 +132,27 @@
   {
    "path": "./crates/inferenced-core/src/schedule/preempt.rs",
    "lines": 204,
-   "bin_bytes": 630,
+   "bin_bytes": null,
    "heat_pct": null,
    "reach": 6
   },
   {
    "path": "./crates/inferenced-core/src/tests/arbiter_tests.rs",
-   "lines": 136,
+   "lines": 202,
+   "bin_bytes": null,
+   "heat_pct": null,
+   "reach": 0
+  },
+  {
+   "path": "./crates/inferenced-core/src/tests/gang_tests.rs",
+   "lines": 134,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./crates/inferenced-core/src/tests/mod.rs",
-   "lines": 5,
+   "lines": 6,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -151,53 +186,60 @@
    "reach": 0
   },
   {
+   "path": "./crates/inferenced-core/src/topology/affinity.rs",
+   "lines": 118,
+   "bin_bytes": null,
+   "heat_pct": null,
+   "reach": 2
+  },
+  {
    "path": "./crates/inferenced-core/src/topology/cpu.rs",
    "lines": 105,
-   "bin_bytes": 5380,
+   "bin_bytes": null,
    "heat_pct": null,
    "reach": 8
   },
   {
    "path": "./crates/inferenced-core/src/topology/drm.rs",
    "lines": 79,
-   "bin_bytes": 6419,
+   "bin_bytes": null,
    "heat_pct": null,
    "reach": 2
   },
   {
    "path": "./crates/inferenced-core/src/topology/mod.rs",
-   "lines": 54,
-   "bin_bytes": 1708,
+   "lines": 56,
+   "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./crates/inferenced-core/src/topology/npu.rs",
    "lines": 53,
-   "bin_bytes": 6219,
+   "bin_bytes": null,
    "heat_pct": null,
    "reach": 2
   },
   {
    "path": "./crates/inferenced-core/src/topology/pstore.rs",
    "lines": 125,
-   "bin_bytes": 5165,
+   "bin_bytes": null,
    "heat_pct": null,
    "reach": 1
   },
   {
    "path": "./crates/inferenced-core/src/topology/triage.rs",
    "lines": 32,
-   "bin_bytes": 652,
+   "bin_bytes": null,
    "heat_pct": null,
    "reach": 1
   },
   {
    "path": "./crates/inferenced-core/src/topology/types.rs",
    "lines": 34,
-   "bin_bytes": 335,
+   "bin_bytes": null,
    "heat_pct": null,
-   "reach": 5
+   "reach": 7
   },
   {
    "path": "./crates/inferenced-daemon/src/activation.rs",
@@ -291,15 +333,22 @@
    "reach": 0
   },
   {
+   "path": "./crates/inferenced-daemon/src/varlink/composite_leases.rs",
+   "lines": 157,
+   "bin_bytes": null,
+   "heat_pct": null,
+   "reach": 1
+  },
+  {
    "path": "./crates/inferenced-daemon/src/varlink/inferenced1.rs",
-   "lines": 145,
+   "lines": 153,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 1
   },
   {
    "path": "./crates/inferenced-daemon/src/varlink/interface_descriptions.rs",
-   "lines": 233,
+   "lines": 243,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 1
@@ -320,7 +369,7 @@
   },
   {
    "path": "./crates/inferenced-daemon/src/varlink/mod.rs",
-   "lines": 120,
+   "lines": 121,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -330,7 +379,7 @@
    "lines": 81,
    "bin_bytes": null,
    "heat_pct": null,
-   "reach": 5
+   "reach": 6
   },
   {
    "path": "./crates/inferenced-daemon/src/varlink/service.rs",
@@ -340,7 +389,14 @@
    "reach": 2
   },
   {
-   "path": "./crates/inferenced-daemon/src/varlink/tests.rs",
+   "path": "./crates/inferenced-daemon/src/varlink/tests/composite_tests.rs",
+   "lines": 101,
+   "bin_bytes": null,
+   "heat_pct": null,
+   "reach": 0
+  },
+  {
+   "path": "./crates/inferenced-daemon/src/varlink/tests/mod.rs",
    "lines": 233,
    "bin_bytes": null,
    "heat_pct": null,
@@ -469,7 +525,7 @@
    "path": "./qa/edge/mod.rs",
    "lines": 131,
    "bin_bytes": null,
-   "heat_pct": 5.19,
+   "heat_pct": null,
    "reach": 0
   },
   {
@@ -609,7 +665,7 @@
    "path": "./qa/integration/mod.rs",
    "lines": 10,
    "bin_bytes": null,
-   "heat_pct": 3.9,
+   "heat_pct": null,
    "reach": 0
   },
   {
@@ -739,5 +795,5 @@
    "reach": 0
   }
  ],
- "notes": "reach counts referencing files (shared file names qualified by ancestor dir); bin_bytes from newest workspace dev rlib per crate via nm (inlining approx, bins re-link the same code; shims excluded, foreign paths never attributed); heat from 77 attributed samples over 7/36 binaries at 10Hz incl. one child level; every repo-resolving frame counts;"
+ "notes": "reach counts referencing files (shared file names qualified by ancestor dir);"
 }

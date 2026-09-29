@@ -1,3 +1,5 @@
+//! Single-device compute lease representation.
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -78,13 +80,3 @@ impl ComputeLease {
         )
     }
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LeaseRequest {
-    pub priority: LeasePriority,
-    pub required_bytes: u64,
-    pub preferred_plane: Option<String>,
-    pub client_unit: Option<String>,
-    pub client_pid: Option<u32>,
-}
-

@@ -1,3 +1,4 @@
+pub mod composite_leases;
 pub mod inferenced1;
 pub mod interface_descriptions;
 pub mod leases;
