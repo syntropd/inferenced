@@ -28,7 +28,8 @@ type ComputePlane (
   kind: string,
   total_memory: int,
   available_memory: int,
-  is_triage_reserved: bool
+  is_triage_reserved: bool,
+  features: ?[]string
 )
 
 type LeaseInfo (
@@ -132,7 +133,8 @@ type ComputePlane (
   kind: string,
   total_memory: int,
   available_memory: int,
-  is_triage_reserved: bool
+  is_triage_reserved: bool,
+  features: ?[]string
 )
 
 type LeaseInfo (
