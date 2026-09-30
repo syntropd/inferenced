@@ -5,9 +5,11 @@ use std::path::Path;
 /// Compute PCIe link throughput in bytes per second from sysfs link speed and width.
 /// BW = lanes * GT/s * factor (with encoding efficiency: 8b/10b for <=5GT/s, 128b/130b for >=8GT/s)
 pub fn compute_pcie_bandwidth(speed_str: &str, width_str: &str) -> u64 {
-    let lanes: u64 = width_str.trim().parse().unwrap_or(0);
+    let lanes: u64 = width_str.trim().trim_start_matches('x').parse().unwrap_or(0);
     if lanes == 0 { return 0; }
-    let speed_val = speed_str.split_whitespace().next().and_then(|s| s.parse::<f64>().ok()).unwrap_or(0.0);
+    let s = speed_str.split_whitespace().next().unwrap_or("");
+    let s_clean = s.trim_end_matches(|c: char| !c.is_ascii_digit() && c != '.');
+    let speed_val = s_clean.parse::<f64>().unwrap_or(0.0);
     if speed_val <= 0.0 { return 0; }
     let factor = if speed_val <= 5.0 {
         0.8 / 8.0 // 8b/10b encoding = 0.10 bytes/transfer
@@ -90,6 +92,11 @@ pub fn discover_drm_planes(dri_dir: &str, sysfs_drm_dir: &str, total_ram: u64, a
                     if pcie_bw > 0 {
                         features.push(format!("pcie-bw-{}", pcie_bw));
                     }
+                    if let Ok(canon) = fs::canonicalize(sysfs_card.join("device")) {
+                        if let Some(bus_id) = canon.file_name().and_then(|n| n.to_str()) {
+                            features.push(format!("pci-bus-{}", bus_id));
+                        }
+                    }
 
                     planes.push(ComputePlane {
                         id: format!("drm-{}", fname),
@@ -124,7 +131,9 @@ pub fn discover_drm_planes(dri_dir: &str, sysfs_drm_dir: &str, total_ram: u64, a
                         let bar_vram = parse_pci_resource_bars(&sys_dev.join("resource"));
                         let mut updated = false;
                         for p in &mut planes {
-                            if p.name.contains("NVIDIA") || p.id.contains(&bus) {
+                            let matches_bus = p.hardware_features.iter().any(|f| f == &format!("pci-bus-{}", bus))
+                                || p.id.contains(&bus);
+                            if matches_bus {
                                 if let Some(ref m) = model_opt {
                                     p.name = m.clone();
                                 }
@@ -140,7 +149,7 @@ pub fn discover_drm_planes(dri_dir: &str, sysfs_drm_dir: &str, total_ram: u64, a
                             let speed = fs::read_to_string(sys_dev.join("current_link_speed")).unwrap_or_default();
                             let width = fs::read_to_string(sys_dev.join("current_link_width")).unwrap_or_default();
                             let bw = compute_pcie_bandwidth(&speed, &width);
-                            let mut feats = vec!["drm-gem".into(), "vram-managed".into(), "nvidia-proprietary".into()];
+                            let mut feats = vec!["drm-gem".into(), "vram-managed".into(), "nvidia-proprietary".into(), format!("pci-bus-{}", bus)];
                             if bw > 0 {
                                 feats.push(format!("pcie-bw-{}", bw));
                             }
@@ -228,6 +237,7 @@ mod tests {
         // Gen1 x1 -> ~250 MB/s
         let bw_gen1_x1 = compute_pcie_bandwidth("2.5 GT/s", "1");
         assert_eq!(bw_gen1_x1, 250_000_000);
+        assert!(compute_pcie_bandwidth("16.0GT/s", "x16") > 30_000_000_000);
     }
 
     #[test]

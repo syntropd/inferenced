@@ -1,6 +1,6 @@
 {
  "repo": "inferenced",
- "rev": "15d0e27",
+ "rev": "daee324",
  "dirty": true,
  "pages": [
   {
@@ -187,7 +187,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/topology/affinity.rs",
-   "lines": 198,
+   "lines": 218,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 2
@@ -201,7 +201,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/topology/drm.rs",
-   "lines": 240,
+   "lines": 250,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 2

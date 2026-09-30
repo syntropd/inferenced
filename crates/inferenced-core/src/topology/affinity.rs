@@ -1,7 +1,8 @@
 //! Hardware affinity scoring based on NUMA distance and PCIe tree depth.
 
 use super::types::ComputePlane;
-use std::path::Path;
+use std::fs;
+use std::path::{Path, PathBuf};
 
 pub const NUMA_LOCAL_DISTANCE: u32 = 10;
 pub const NUMA_REMOTE_DISTANCE: u32 = 20;
@@ -16,6 +17,19 @@ pub fn numa_distance(node_a: Option<u32>, node_b: Option<u32>) -> u32 {
     }
 }
 
+fn resolve_pci_sysfs_path(p: &Path) -> PathBuf {
+    if p.starts_with("/sys") {
+        return fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf());
+    }
+    if let Some(fname) = p.file_name() {
+        let sys_dev = Path::new("/sys/class/drm").join(fname).join("device");
+        if let Ok(canon) = fs::canonicalize(&sys_dev) {
+            return canon;
+        }
+    }
+    fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf())
+}
+
 /// Calculate PCIe switch hop distance between two device paths.
 /// Returns estimated hop count (1 = peer ports on same switch, 2 = same host bridge, 4 = cross socket/unknown).
 pub fn pcie_hop_distance(dev_a: Option<&Path>, dev_b: Option<&Path>) -> u32 {
@@ -27,8 +41,14 @@ pub fn pcie_hop_distance(dev_a: Option<&Path>, dev_b: Option<&Path>) -> u32 {
         return 0;
     }
 
-    let comps_a: Vec<_> = pa.components().collect();
-    let comps_b: Vec<_> = pb.components().collect();
+    let canon_a = resolve_pci_sysfs_path(pa);
+    let canon_b = resolve_pci_sysfs_path(pb);
+    if canon_a == canon_b {
+        return 0;
+    }
+
+    let comps_a: Vec<_> = canon_a.components().collect();
+    let comps_b: Vec<_> = canon_b.components().collect();
 
     let mut common = 0;
     for (ca, cb) in comps_a.iter().zip(comps_b.iter()) {
