@@ -20,6 +20,8 @@ fn make_stress_arbiter() -> Arbiter {
         is_triage_reserved: true,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
     Arbiter::new(topo)
 }

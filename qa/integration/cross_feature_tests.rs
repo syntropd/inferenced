@@ -23,6 +23,8 @@ fn make_topo(cap: u64) -> HardwareTopology {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
     topo
 }
@@ -198,6 +200,8 @@ async fn test_interaction_uma_preempt_thaw_and_release_lifecycle() {
         id: id.into(), name: id.into(), kind, device_path: None, total_memory_bytes: total_bytes,
         available_memory_bytes: total_bytes, numa_node: None, supported_formats: vec![],
         is_triage_reserved: false, is_quarantined: false, hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     };
     topo.planes.push(make_p("plane-uma-gpu", ComputePlaneKind::IntegratedUma));
     topo.planes.push(make_p("cpu-host", ComputePlaneKind::CpuMatrixExtension));

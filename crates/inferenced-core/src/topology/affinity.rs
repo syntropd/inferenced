@@ -73,6 +73,62 @@ pub fn gang_affinity_score(planes: &[&ComputePlane]) -> u64 {
     total
 }
 
+/// Classify the interconnect link between two compute planes.
+pub fn classify_peer_link(a: &ComputePlane, b: &ComputePlane) -> super::types::DeviceLink {
+    use super::types::{ComputePlaneKind, DeviceLink, LinkType};
+
+    let has_nvlink_a = a.hardware_features.iter().any(|f| f.contains("nvlink"));
+    let has_nvlink_b = b.hardware_features.iter().any(|f| f.contains("nvlink"));
+
+    let (link_type, bandwidth, latency) = if has_nvlink_a && has_nvlink_b {
+        (LinkType::NVLink, 200_000_000_000, 800)
+    } else {
+        let hops = pcie_hop_distance(a.device_path.as_deref(), b.device_path.as_deref());
+        let same_numa = a.numa_node.is_none()
+            || b.numa_node.is_none()
+            || a.numa_node == b.numa_node;
+        let is_cpu = a.kind == ComputePlaneKind::CpuMatrixExtension
+            || b.kind == ComputePlaneKind::CpuMatrixExtension;
+
+        if !is_cpu && hops <= 2 && same_numa {
+            let parse_bw = |p: &ComputePlane| {
+                p.hardware_features.iter().find_map(|f| {
+                    f.strip_prefix("pcie-bw-").and_then(|s| s.parse::<u64>().ok())
+                })
+            };
+            let bw = parse_bw(a)
+                .and_then(|bwa| parse_bw(b).map(|bwb| bwa.min(bwb)))
+                .or_else(|| parse_bw(a))
+                .or_else(|| parse_bw(b))
+                .unwrap_or(31_508_000_000);
+            (LinkType::PCIe, bw, 2500)
+        } else {
+            (LinkType::HostBridge, 16_000_000_000, 8000)
+        }
+    };
+
+    DeviceLink {
+        peer_plane_id: b.id.clone(),
+        link_type,
+        bandwidth_bytes_sec: bandwidth,
+        latency_nanos: latency,
+    }
+}
+
+/// Populate peer-to-peer interconnect link topology across all planes.
+pub fn populate_p2p_links(planes: &mut [ComputePlane]) {
+    let count = planes.len();
+    for i in 0..count {
+        let mut links = Vec::with_capacity(count.saturating_sub(1));
+        for j in 0..count {
+            if i != j {
+                links.push(classify_peer_link(&planes[i], &planes[j]));
+            }
+        }
+        planes[i].p2p_links = Some(links);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -92,6 +148,8 @@ mod tests {
             is_triage_reserved: false,
             is_quarantined: false,
             hardware_features: vec![],
+            p2p_links: None,
+            kernel_used_memory: 0,
         }
     }
 
@@ -114,5 +172,27 @@ mod tests {
 
         let gang_score = gang_affinity_score(&[&p1, &p2]);
         assert_eq!(gang_score, d12 as u64);
+    }
+
+    #[test]
+    fn test_peer_link_classification_and_population() {
+        use crate::topology::types::LinkType;
+
+        let mut p1 = mock_plane("gpu0", Some(0), Some("/sys/devices/pci0000:00/0000:00:01.0/renderD128"));
+        let mut p2 = mock_plane("gpu1", Some(0), Some("/sys/devices/pci0000:00/0000:00:01.0/renderD129"));
+        let link_pcie = classify_peer_link(&p1, &p2);
+        assert_eq!(link_pcie.link_type, LinkType::PCIe);
+        assert!(link_pcie.bandwidth_bytes_sec >= 16_000_000_000);
+
+        p1.hardware_features.push("nvlink".into());
+        p2.hardware_features.push("nvlink".into());
+        let link_nv = classify_peer_link(&p1, &p2);
+        assert_eq!(link_nv.link_type, LinkType::NVLink);
+        assert_eq!(link_nv.bandwidth_bytes_sec, 200_000_000_000);
+
+        let mut planes = vec![p1, p2];
+        populate_p2p_links(&mut planes);
+        assert_eq!(planes[0].p2p_links.as_ref().unwrap().len(), 1);
+        assert_eq!(planes[0].p2p_links.as_ref().unwrap()[0].link_type, LinkType::NVLink);
     }
 }

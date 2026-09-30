@@ -30,6 +30,8 @@ async fn test_scenario_varlink_service_introspection_and_management() {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec!["Hailo-8".into()],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
 
     let arbiter = Arc::new(Arbiter::new(topo));

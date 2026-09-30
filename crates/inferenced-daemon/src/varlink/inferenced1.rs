@@ -84,6 +84,9 @@ async fn handle_list_planes(arbiter: &Arc<Arbiter>) -> VarlinkReply {
                 "available_memory": p.available_memory_bytes,
                 "is_triage_reserved": p.is_triage_reserved,
                 "features": p.hardware_features,
+                "p2p_links": p.p2p_links,
+                "kernel_used_memory": p.kernel_used_memory,
+                "device_path": p.device_path,
             })
         })
         .collect();
@@ -104,6 +107,9 @@ async fn handle_get_topology(arbiter: &Arc<Arbiter>) -> VarlinkReply {
                 "available_memory": p.available_memory_bytes,
                 "is_triage_reserved": p.is_triage_reserved,
                 "features": p.hardware_features,
+                "p2p_links": p.p2p_links,
+                "kernel_used_memory": p.kernel_used_memory,
+                "device_path": p.device_path,
             })
         })
         .collect();

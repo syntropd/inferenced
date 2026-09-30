@@ -20,9 +20,9 @@ fn create_psi_topology(total_mem: u64) -> HardwareTopology {
         available_memory_bytes: total_mem,
         numa_node: None,
         supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
+        is_triage_reserved: false, is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None, kernel_used_memory: 0,
     });
     topo
 }
@@ -38,9 +38,9 @@ fn create_uma_cpu_topology(capacity_bytes: u64) -> HardwareTopology {
         available_memory_bytes: capacity_bytes,
         numa_node: Some(0),
         supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
+        is_triage_reserved: false, is_quarantined: false,
         hardware_features: vec!["unified_memory".into()],
+        p2p_links: None, kernel_used_memory: 0,
     });
     topo.planes.push(ComputePlane {
         id: "plane-cpu-adv".into(),
@@ -51,9 +51,9 @@ fn create_uma_cpu_topology(capacity_bytes: u64) -> HardwareTopology {
         available_memory_bytes: capacity_bytes,
         numa_node: Some(0),
         supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
+        is_triage_reserved: false, is_quarantined: false,
         hardware_features: vec!["avx512".into()],
+        p2p_links: None, kernel_used_memory: 0,
     });
     topo
 }

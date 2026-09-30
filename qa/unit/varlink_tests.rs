@@ -65,6 +65,8 @@ async fn test_varlink_get_topology_payload() {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
 
     let arbiter = Arbiter::new(topo);
@@ -106,6 +108,8 @@ async fn test_varlink_acquire_and_release_roundtrip() {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
     let arbiter = Arc::new(Arbiter::new(topo));
     let server_arbiter = arbiter.clone();

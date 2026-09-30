@@ -41,5 +41,5 @@ pub use preempt::{
     PreemptCoordinator, PreemptError, PreemptRecord, PreemptTier, DEFAULT_PREEMPT_TIMEOUT,
 };
 pub use psi::{PressureLevel, PressureMetrics};
-pub use topology::{ComputePlane, ComputePlaneKind, HardwareTopology};
+pub use topology::{ComputePlane, ComputePlaneKind, DeviceLink, HardwareTopology, LinkType};
 

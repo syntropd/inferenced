@@ -66,6 +66,8 @@ fn test_discovery_triage_enclave_selection_hierarchy() {
             is_triage_reserved: false,
         is_quarantined: false,
             hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
         },
         ComputePlane {
             id: "npu-0".into(),
@@ -79,6 +81,8 @@ fn test_discovery_triage_enclave_selection_hierarchy() {
             is_triage_reserved: false,
         is_quarantined: false,
             hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
         },
     ];
 

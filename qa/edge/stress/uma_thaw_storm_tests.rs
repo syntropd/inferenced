@@ -21,6 +21,8 @@ fn create_uma_cpu_topology(capacity_bytes: u64) -> HardwareTopology {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec!["unified_memory".into()],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
     topo.planes.push(ComputePlane {
         id: "plane-cpu-0".into(),
@@ -34,6 +36,8 @@ fn create_uma_cpu_topology(capacity_bytes: u64) -> HardwareTopology {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec!["amx".into()],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
     topo
 }

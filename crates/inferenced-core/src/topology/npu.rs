@@ -25,6 +25,8 @@ pub fn discover_npu_planes(accel_dir: &str, hailo_dev: &str) -> Vec<ComputePlane
                         is_triage_reserved: false,
                         is_quarantined: false,
                         hardware_features: vec!["low-power".into(), "sram-scratchpad".into(), "accel-subsystem".into()],
+                        p2p_links: None,
+                        kernel_used_memory: 0,
                     });
                 }
             }
@@ -46,6 +48,8 @@ pub fn discover_npu_planes(accel_dir: &str, hailo_dev: &str) -> Vec<ComputePlane
             is_triage_reserved: false,
             is_quarantined: false,
             hardware_features: vec!["26-tops".into(), "pcie-edge".into()],
+            p2p_links: None,
+            kernel_used_memory: 0,
         });
     }
 

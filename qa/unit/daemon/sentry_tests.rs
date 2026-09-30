@@ -26,6 +26,8 @@ async fn test_sentry_emergency_lease_bypasses_exhaustion() {
         is_triage_reserved: true,
         is_quarantined: false,
         hardware_features: vec!["AMX-Tile".into()],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
 
     let arbiter = Arbiter::new(topo);
@@ -88,6 +90,8 @@ async fn test_sentry_triage_socket_protocol_roundtrip() {
         is_triage_reserved: true,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
 
     let arbiter = Arc::new(Arbiter::new(topo));
@@ -154,6 +158,8 @@ async fn test_sentry_non_reserved_planes_unaffected_by_sentry_reservation() {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
     topo.planes.push(ComputePlane {
         id: "npu-triage".into(),
@@ -167,6 +173,8 @@ async fn test_sentry_non_reserved_planes_unaffected_by_sentry_reservation() {
         is_triage_reserved: true,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
 
     let arbiter = Arbiter::new(topo);

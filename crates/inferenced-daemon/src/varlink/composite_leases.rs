@@ -73,6 +73,7 @@ pub async fn handle_acquire_composite_lease(
                     "role": s.role.to_string(),
                     "allocated_memory": s.allocated_memory_bytes,
                     "numa_node": s.numa_node,
+                    "device_path": s.device_path,
                 })
             }).collect();
             VarlinkReply::ok(json!({
@@ -120,6 +121,7 @@ pub async fn handle_list_composite_leases(arbiter: &Arc<Arbiter>) -> VarlinkRepl
                 "role": s.role.to_string(),
                 "allocated_memory": s.allocated_memory_bytes,
                 "numa_node": s.numa_node,
+                "device_path": s.device_path,
             })
         }).collect();
         json!({

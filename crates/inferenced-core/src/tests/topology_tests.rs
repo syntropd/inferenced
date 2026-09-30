@@ -21,7 +21,7 @@ fn test_drm_sysfs_parsing_mock() {
     fs::write(dev_dir.join("vendor"), "0x10de\n").unwrap();
     fs::write(dev_dir.join("mem_info_vram_total"), "8589934592\n").unwrap();
 
-    let (vendor, integrated, vram) = drm::inspect_drm_sysfs(dir.path(), 16 * 1024 * 1024 * 1024);
+    let (vendor, integrated, vram, _used, _bw) = drm::inspect_drm_sysfs(dir.path(), 16 * 1024 * 1024 * 1024);
     assert_eq!(vendor, "NVIDIA Corporation");
     assert!(!integrated);
     assert_eq!(vram, 8589934592);
@@ -80,6 +80,8 @@ fn test_triage_enclave_assignment_and_quota() {
             is_triage_reserved: false,
             is_quarantined: false,
             hardware_features: vec![],
+            p2p_links: None,
+            kernel_used_memory: 0,
         },
     ];
 

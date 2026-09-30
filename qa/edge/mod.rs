@@ -28,6 +28,8 @@ async fn test_edge_insufficient_memory_rejection() {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
 
     let arbiter = Arbiter::new(topo);
@@ -88,6 +90,8 @@ async fn test_edge_sentry_emergency_preemption_succeeds_even_when_exhausted() {
         is_triage_reserved: true,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
 
     let arbiter = Arbiter::new(topo);

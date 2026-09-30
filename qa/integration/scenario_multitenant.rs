@@ -24,6 +24,8 @@ async fn test_scenario_multitenant_arbitration_and_cooperative_yield() {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
 
     let arbiter = Arbiter::new(topo);

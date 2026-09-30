@@ -88,6 +88,8 @@ fn test_assign_triage_enclave_prefers_npu() {
             is_triage_reserved: false,
         is_quarantined: false,
             hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
         },
         ComputePlane {
             id: "npu-accel0".into(),
@@ -101,6 +103,8 @@ fn test_assign_triage_enclave_prefers_npu() {
             is_triage_reserved: false,
         is_quarantined: false,
             hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
         },
     ];
 
@@ -124,6 +128,8 @@ fn test_assign_triage_enclave_falls_back_to_cpu() {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     }];
 
     let reserved = triage::assign_triage_enclave(&mut planes);
@@ -150,6 +156,8 @@ fn test_assign_triage_enclave_proportional_on_constrained_host() {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     }];
 
     let reserved = triage::assign_triage_enclave(&mut planes);
@@ -179,6 +187,8 @@ async fn test_arbiter_acquire_and_release_lease() {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
 
     let arbiter = Arbiter::new(topo);

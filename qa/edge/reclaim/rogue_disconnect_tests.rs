@@ -23,6 +23,8 @@ fn create_rogue_topology(total_mem: u64) -> HardwareTopology {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
     topo
 }

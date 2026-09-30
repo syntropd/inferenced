@@ -16,6 +16,8 @@ fn create_test_topology(plane_id: &str, mem_bytes: u64) -> HardwareTopology {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec!["test".into()],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
     topo
 }
@@ -151,6 +153,8 @@ async fn test_composite_gang_atomic_allocation() {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
     topo.planes.push(ComputePlane {
         id: "gpu-gang-1".into(),
@@ -164,6 +168,8 @@ async fn test_composite_gang_atomic_allocation() {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
 
     let arbiter = Arbiter::new(topo);

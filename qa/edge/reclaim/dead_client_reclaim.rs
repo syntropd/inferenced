@@ -21,6 +21,8 @@ async fn test_dead_client_lease_reclaim_lifecycle() {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
 
     let arbiter = Arbiter::new(topo);

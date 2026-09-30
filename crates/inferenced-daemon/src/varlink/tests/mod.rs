@@ -20,6 +20,8 @@ fn make_test_topo() -> HardwareTopology {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec!["vulkan".into()],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
     topo.total_system_ram_bytes = 32 * 1024 * 1024 * 1024;
     topo.available_system_ram_bytes = 16 * 1024 * 1024 * 1024;

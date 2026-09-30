@@ -19,6 +19,8 @@ fn create_test_plane(id: &str, mem_gb: u64, numa: Option<u32>) -> ComputePlane {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     }
 }
 

@@ -25,6 +25,8 @@ fn make_test_state() -> Arc<AppState> {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
     let arbiter = Arc::new(Arbiter::new(topo));
     let preempt = Arc::new(PreemptCoordinator::new(arbiter.clone()));

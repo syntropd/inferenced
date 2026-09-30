@@ -29,6 +29,8 @@ fn make_ext_topo() -> HardwareTopology {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
     topo
 }
@@ -112,6 +114,8 @@ async fn test_interaction_hardware_plane_rediscovery_with_active_leases() {
         id: "plane-hotplug-npu".into(), name: "Hotplug NPU".into(), kind: ComputePlaneKind::NpuAccelerator,
         device_path: None, total_memory_bytes: 2 * 1024 * 1024 * 1024, available_memory_bytes: 2 * 1024 * 1024 * 1024,
         numa_node: None, supported_formats: vec![], is_triage_reserved: false, is_quarantined: false, hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
     let arbiter = Arbiter::new(initial_topo);
 

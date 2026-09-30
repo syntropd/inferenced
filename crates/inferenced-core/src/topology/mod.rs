@@ -7,7 +7,7 @@ pub mod triage;
 pub mod types;
 
 pub use affinity::{gang_affinity_score, numa_distance, pcie_hop_distance, topology_distance};
-pub use types::{ComputePlane, ComputePlaneKind, HardwareTopology};
+pub use types::{ComputePlane, ComputePlaneKind, DeviceLink, HardwareTopology, LinkType};
 
 use crate::error::Result;
 
@@ -44,6 +44,9 @@ impl HardwareTopology {
 
         // 5. Assign Sentry Emergency Triage Enclave (skips quarantined planes)
         triage::assign_triage_enclave(&mut planes);
+
+        // 6. Populate multi-GPU P2P link topology
+        affinity::populate_p2p_links(&mut planes);
 
         Ok(Self {
             planes,

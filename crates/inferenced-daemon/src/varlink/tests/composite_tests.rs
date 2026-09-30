@@ -23,6 +23,8 @@ fn make_two_gpu_topo() -> HardwareTopology {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
     topo.planes.push(ComputePlane {
         id: "plane-gpu-1".into(),
@@ -36,6 +38,8 @@ fn make_two_gpu_topo() -> HardwareTopology {
         is_triage_reserved: false,
         is_quarantined: false,
         hardware_features: vec![],
+        p2p_links: None,
+        kernel_used_memory: 0,
     });
     topo
 }
