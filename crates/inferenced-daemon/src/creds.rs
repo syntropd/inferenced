@@ -6,7 +6,7 @@ use tracing::debug;
 /// Integration with systemd-creds: reads encrypted/decrypted service credentials.
 /// When systemd manages a service using LoadCredential= or LoadCredentialEncrypted=,
 /// the decrypted credentials are placed in the directory defined by $CREDENTIALS_DIRECTORY.
-
+///
 /// Load a plaintext credential by name from $CREDENTIALS_DIRECTORY.
 pub fn load_credential(name: &str) -> Option<String> {
     let creds_dir = env::var("CREDENTIALS_DIRECTORY").ok()?;

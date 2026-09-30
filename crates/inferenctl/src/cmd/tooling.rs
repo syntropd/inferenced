@@ -5,10 +5,7 @@ use inferenced_core::{arbiter::Arbiter, lease::LeasePriority, psi::PressureMetri
 use std::path::Path;
 use std::time::Instant;
 
-pub fn run_completions(shell: &str) -> Result<()> {
-    match shell.to_lowercase().as_str() {
-        "bash" => {
-            println!("{}", r#"# bash completion for inferenctl
+const BASH_COMPLETIONS: &str = r#"# bash completion for inferenctl
 _inferenctl() {
     local cur prev words cword
     _init_completion || return
@@ -19,10 +16,9 @@ _inferenctl() {
     fi
 }
 complete -F _inferenctl inferenctl
-"#);
-        }
-        "zsh" => {
-            println!("{}", r#"#compdef inferenctl
+"#;
+
+const ZSH_COMPLETIONS: &str = r#"#compdef inferenctl
 _inferenctl() {
     local -a commands
     commands=(
@@ -50,10 +46,9 @@ _inferenctl() {
     _describe 'command' commands
 }
 _inferenctl "$@"
-"#);
-        }
-        "fish" => {
-            println!("{}", r#"# fish completion for inferenctl
+"#;
+
+const FISH_COMPLETIONS: &str = r#"# fish completion for inferenctl
 complete -c inferenctl -f
 complete -c inferenctl -n "__fish_use_subcommand" -a "status" -d "Display daemon operational health and compute planes"
 complete -c inferenctl -n "__fish_use_subcommand" -a "planes" -d "List discovered compute planes and memory pools"
@@ -75,17 +70,9 @@ complete -c inferenctl -n "__fish_use_subcommand" -a "test-triage" -d "Send synt
 complete -c inferenctl -n "__fish_use_subcommand" -a "benchmark" -d "Execute throughput and latency benchmarks"
 complete -c inferenctl -n "__fish_use_subcommand" -a "completions" -d "Generate shell completion scripts"
 complete -c inferenctl -n "__fish_use_subcommand" -a "man" -d "Output man page in troff format"
-"#);
-        }
-        _ => {
-            eprintln!("Unsupported shell: {}. Supported shells: bash, zsh, fish", shell);
-        }
-    }
-    Ok(())
-}
+"#;
 
-pub fn run_man() -> Result<()> {
-    println!("{}", r#".TH INFERENCTL 1 "September 2026" "systemd-inferenced 0.1.0" "User Commands"
+const MAN_PAGE: &str = r#".TH INFERENCTL 1 "September 2026" "systemd-inferenced 0.1.0" "User Commands"
 .SH NAME
 inferenctl \- Control and inspect systemd-inferenced hardware arbitration
 .SH SYNOPSIS
@@ -118,7 +105,22 @@ Synthetic Sentry emergency triage verification ping and IPC throughput benchmark
 Shell tab-completion generation (bash, zsh) and troff man page output.
 .SH AUTHORS
 systemd-inferenced contributors.
-"#);
+"#;
+
+pub fn run_completions(shell: &str) -> Result<()> {
+    match shell.to_lowercase().as_str() {
+        "bash" => print!("{BASH_COMPLETIONS}"),
+        "zsh" => print!("{ZSH_COMPLETIONS}"),
+        "fish" => print!("{FISH_COMPLETIONS}"),
+        _ => {
+            eprintln!("Unsupported shell: {}. Supported shells: bash, zsh, fish", shell);
+        }
+    }
+    Ok(())
+}
+
+pub fn run_man() -> Result<()> {
+    print!("{MAN_PAGE}");
     Ok(())
 }
 

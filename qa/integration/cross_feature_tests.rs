@@ -251,5 +251,5 @@ async fn test_interaction_uma_preempt_thaw_and_release_lifecycle() {
 
 #[test]
 fn test_integration_suite_sanity_check() {
-    assert!(true, "Integration test harness initialized successfully");
+    // Integration test harness initialized successfully
 }

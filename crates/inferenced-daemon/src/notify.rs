@@ -99,14 +99,14 @@ pub fn send_notification_to(socket_path: &str, state: &str) -> io::Result<usize>
     })?;
 
     let sock = socket(AddressFamily::UNIX, SocketType::DGRAM, None)
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        .map_err(io::Error::other)?;
 
     if let Ok(flags) = fcntl_getfd(&sock) {
         let _ = fcntl_setfd(&sock, flags | FdFlags::CLOEXEC);
     }
 
     sendto_unix(&sock, state.as_bytes(), SendFlags::empty(), &addr)
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+        .map_err(io::Error::other)
 }
 
 #[cfg(test)]
