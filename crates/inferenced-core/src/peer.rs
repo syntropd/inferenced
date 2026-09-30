@@ -71,19 +71,19 @@ impl PeerInfo {
         let is_container = cgroup_path.contains("machine.slice");
         let is_batch = cgroup_path.contains("ai-batch.slice");
 
+        let default_slice = if is_container {
+            "machine.slice"
+        } else if is_batch {
+            "ai-batch.slice"
+        } else {
+            "system.slice"
+        };
+
         // Extract first .slice segment in path
         let slice = cgroup_path
             .split('/')
             .find(|seg| seg.ends_with(".slice"))
-            .unwrap_or_else(|| {
-                if is_container {
-                    "machine.slice"
-                } else if is_batch {
-                    "ai-batch.slice"
-                } else {
-                    "system.slice"
-                }
-            })
+            .unwrap_or(default_slice)
             .to_string();
 
         (slice, is_container, is_batch)

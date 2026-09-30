@@ -19,8 +19,7 @@ pub fn read_meminfo_from(path: &str) -> (u64, u64) {
 }
 
 pub fn parse_kb(rest: &str) -> u64 {
-    rest.trim()
-        .split_whitespace()
+    rest.split_whitespace()
         .next()
         .and_then(|v| v.parse::<u64>().ok())
         .map(|kb| kb * 1024)

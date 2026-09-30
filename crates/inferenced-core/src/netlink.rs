@@ -55,14 +55,14 @@ impl Uevent {
     pub fn is_compute_device(&self) -> bool {
         self.subsystem == "drm"
             || self.subsystem == "accel"
-            || (self.subsystem == "misc" && self.devname.as_deref().map_or(false, |n| n.contains("hailo")))
+            || (self.subsystem == "misc" && self.devname.as_deref().is_some_and(|n| n.contains("hailo")))
             || self.subsystem == "kfd"
     }
 
     /// Returns true if the event represents an ASIC reset or driver timeout event.
     pub fn is_reset_event(&self) -> bool {
         self.action == "change"
-            && self.properties.get("RESET").map_or(false, |v| v == "1")
+            && self.properties.get("RESET").is_some_and(|v| v == "1")
     }
 }
 

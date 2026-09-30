@@ -1,10 +1,12 @@
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
+
 use crate::error::{Error, Result};
 use rustix::mm::{madvise, Advice};
 use std::ffi::c_void;
 
 /// Page management hints using Linux madvise() and kernel zswap.
 /// Delegates page residency directly to the kernel page cache rather than userland paging.
-
+///
 /// Advise the kernel that the specified address range will be accessed soon.
 /// Triggers asynchronous read-ahead into host RAM.
 pub fn advise_willneed(addr: *mut c_void, len: usize) -> Result<()> {

@@ -169,7 +169,7 @@ pub fn allocate_gang(
             candidates.sort_by_key(|&i| {
                 let mut current_planes: Vec<&ComputePlane> = selected_indices.iter().map(|&idx| &topology.planes[idx]).collect();
                 current_planes.push(&topology.planes[i]);
-                (gang_affinity_score(&current_planes), std::u64::MAX - topology.planes[i].available_memory_bytes)
+                (gang_affinity_score(&current_planes), u64::MAX - topology.planes[i].available_memory_bytes)
             });
             candidates[0]
         };
