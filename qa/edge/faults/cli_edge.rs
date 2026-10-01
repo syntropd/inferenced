@@ -1,12 +1,54 @@
 use std::path::PathBuf;
 use std::process::Command;
 
+static BUILD_ONCE: std::sync::Once = std::sync::Once::new();
+
+fn workspace_root() -> PathBuf {
+    let mut path = std::env::current_exe().unwrap_or_default();
+    while path.pop() {
+        if path.join("Cargo.toml").exists() && path.join("crates/inferenctl").exists() {
+            return path;
+        }
+    }
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().map(PathBuf::from).unwrap_or_else(|| PathBuf::from("."))
+}
+
 fn find_inferenctl() -> PathBuf {
     if let Ok(cargo_bin) = std::env::var("CARGO_BIN_EXE_inferenctl") {
-        return PathBuf::from(cargo_bin);
+        let p = PathBuf::from(cargo_bin);
+        if p.exists() {
+            return p;
+        }
+    }
+    let root = workspace_root();
+    let default_candidate = if let Ok(dir) = std::env::var("CARGO_TARGET_DIR") {
+        PathBuf::from(dir).join("debug/inferenctl")
+    } else {
+        root.join("target/debug/inferenctl")
+    };
+    if !default_candidate.exists() {
+        BUILD_ONCE.call_once(|| {
+            let manifest = root.join("Cargo.toml");
+            let _ = Command::new("cargo")
+                .args(["build", "-q", "--manifest-path"])
+                .arg(&manifest)
+                .args(["-p", "inferenctl", "--bin", "inferenctl"])
+                .status();
+        });
+    }
+    if default_candidate.exists() {
+        return default_candidate;
     }
     let mut path = std::env::current_exe().unwrap_or_default();
     while path.pop() {
+        if path.file_name().map(|n| n == "deps").unwrap_or(false) {
+            if let Some(parent) = path.parent() {
+                let candidate = parent.join("inferenctl");
+                if candidate.exists() {
+                    return candidate;
+                }
+            }
+        }
         if path.file_name().map(|n| n == "target").unwrap_or(false) {
             let candidate = path.join("debug/inferenctl");
             if candidate.exists() {
@@ -14,7 +56,7 @@ fn find_inferenctl() -> PathBuf {
             }
         }
     }
-    PathBuf::from("target/debug/inferenctl")
+    default_candidate
 }
 
 #[test]
