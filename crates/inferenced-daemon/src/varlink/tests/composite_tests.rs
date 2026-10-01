@@ -103,3 +103,58 @@ async fn test_varlink_acquire_and_release_composite_lease() {
     ).await;
     assert!(rel_resp["parameters"].is_object());
 }
+
+#[tokio::test]
+async fn test_varlink_drm_watermark_and_resize_lease() {
+    let dir = tempdir().unwrap();
+    let sock = dir.path().join("varlink_watermark_test.sock");
+    let listener = bind_or_create_listener(sock.to_str().unwrap()).unwrap();
+    let arbiter = Arc::new(Arbiter::new(make_two_gpu_topo()));
+
+    let s_arb = arbiter.clone();
+    tokio::spawn(async move {
+        let _ = run_varlink_listener(listener, s_arb).await;
+    });
+
+    let mut client = UnixStream::connect(&sock).await.unwrap();
+
+    // 1. GetDrmWatermark
+    let wm_resp = varlink_call(
+        &mut client,
+        "io.syntrop.Inference1.GetDrmWatermark",
+        json!({}),
+    ).await;
+    assert!(wm_resp["parameters"]["watermarks"].is_array());
+
+    // 2. AcquireLease
+    let acq_resp = varlink_call(
+        &mut client,
+        "io.syntrop.Inference1.AcquireLease",
+        json!({
+            "priority": "Interactive",
+            "memory_bytes": 1024 * 1024 * 1024,
+            "plane": "plane-gpu-0",
+        }),
+    ).await;
+    let lease_id = acq_resp["parameters"]["lease_id"].as_str().unwrap();
+
+    // 3. ResizeLease to 2GB
+    let resize_resp = varlink_call(
+        &mut client,
+        "io.syntrop.Inference1.ResizeLease",
+        json!({
+            "lease_id": lease_id,
+            "memory_bytes": 2u64 * 1024 * 1024 * 1024,
+        }),
+    ).await;
+    assert_eq!(resize_resp["parameters"]["lease_id"], lease_id);
+    assert_eq!(resize_resp["parameters"]["allocated_memory"], 2u64 * 1024 * 1024 * 1024);
+
+    // 4. ReleaseLease
+    let rel_resp = varlink_call(
+        &mut client,
+        "io.syntrop.Inference1.ReleaseLease",
+        json!({ "lease_id": lease_id }),
+    ).await;
+    assert!(rel_resp["parameters"].is_object());
+}

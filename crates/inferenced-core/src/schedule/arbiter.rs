@@ -202,6 +202,46 @@ impl Arbiter {
         }
         Ok(())
     }
+
+    pub async fn resize_lease(&self, lease_id: LeaseId, new_bytes: u64) -> Result<ComputeLease> {
+        let mut state = self.state.write().await;
+        let ArbiterState { ref mut topology, ref mut leases, .. } = *state;
+        let lease = leases.get_mut(&lease_id).ok_or_else(|| Error::LeaseNotFound(lease_id.to_string()))?;
+        if !lease.is_active() {
+            return Err(Error::LeaseNotFound(format!("Lease {} is not active", lease_id)));
+        }
+        let old_bytes = lease.allocated_memory_bytes;
+        if new_bytes > old_bytes {
+            let diff = new_bytes - old_bytes;
+            let plane = topology.planes.iter().find(|p| p.id == lease.plane_id)
+                .ok_or_else(|| Error::PlaneNotFound(lease.plane_id.clone()))?;
+            if plane.available_memory_bytes < diff {
+                return Err(Error::ResourceExhaustion {
+                    plane: lease.plane_id.clone(),
+                    requested_bytes: diff,
+                    available_bytes: plane.available_memory_bytes,
+                });
+            }
+            if plane.kind == ComputePlaneKind::IntegratedUma {
+                if let Some(cpu) = topology.planes.iter().find(|p| p.kind == ComputePlaneKind::CpuMatrixExtension) {
+                    if cpu.available_memory_bytes < diff {
+                        return Err(Error::ResourceExhaustion {
+                            plane: cpu.id.clone(),
+                            requested_bytes: diff,
+                            available_bytes: cpu.available_memory_bytes,
+                        });
+                    }
+                }
+            }
+            gang_scheduler::deduct_plane_memory(topology, &lease.plane_id, diff);
+        } else if new_bytes < old_bytes {
+            let diff = old_bytes - new_bytes;
+            gang_scheduler::restore_plane_memory(topology, &lease.plane_id, diff);
+        }
+        lease.allocated_memory_bytes = new_bytes;
+        info!("Resized lease {} on plane {} to {} bytes", lease_id, lease.plane_id, new_bytes);
+        Ok(lease.clone())
+    }
 }
 
 pub use crate::lease::LeaseRequest;

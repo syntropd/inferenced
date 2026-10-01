@@ -33,7 +33,11 @@ mod tests {
         assert!(ORG_VARLINK_SERVICE_IDL.contains("interface org.varlink.service"));
         assert!(IO_SYNTROP_INFERENCE1_IDL.contains("interface io.syntrop.Inference1"));
         assert!(IO_SYNTROP_INFERENCE1_IDL.contains("AcquireCompositeLease"));
+        assert!(IO_SYNTROP_INFERENCE1_IDL.contains("GetDrmWatermark"));
+        assert!(IO_SYNTROP_INFERENCE1_IDL.contains("ResizeLease"));
         assert!(IO_SYSTEMD_INFERENCED1_IDL.contains("interface io.systemd.inferenced1"));
         assert!(IO_SYSTEMD_INFERENCED1_IDL.contains("AcquireCompositeLease"));
+        assert!(IO_SYSTEMD_INFERENCED1_IDL.contains("GetDrmWatermark"));
+        assert!(IO_SYSTEMD_INFERENCED1_IDL.contains("ResizeLease"));
     }
 }

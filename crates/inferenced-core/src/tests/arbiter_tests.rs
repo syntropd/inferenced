@@ -206,3 +206,28 @@ async fn test_composite_gang_atomic_allocation() {
     assert_eq!(t2.planes[1].available_memory_bytes, 4 * 1024 * 1024 * 1024);
 }
 
+#[tokio::test]
+async fn test_resize_lease() {
+    let topo = create_test_topology("gpu-resize", 4 * 1024 * 1024 * 1024);
+    let arbiter = Arbiter::new(topo);
+    let lease = arbiter
+        .acquire_lease(
+            LeasePriority::Interactive,
+            1024 * 1024 * 1024,
+            Some("gpu-resize".into()),
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+    assert_eq!(lease.allocated_memory_bytes, 1024 * 1024 * 1024);
+
+    let expanded = arbiter.resize_lease(lease.id, 2 * 1024 * 1024 * 1024).await.unwrap();
+    assert_eq!(expanded.allocated_memory_bytes, 2 * 1024 * 1024 * 1024);
+    assert_eq!(arbiter.get_topology().await.planes[0].available_memory_bytes, 2 * 1024 * 1024 * 1024);
+
+    let shrunk = arbiter.resize_lease(lease.id, 512 * 1024 * 1024).await.unwrap();
+    assert_eq!(shrunk.allocated_memory_bytes, 512 * 1024 * 1024);
+    assert_eq!(arbiter.get_topology().await.planes[0].available_memory_bytes, 3584 * 1024 * 1024);
+}
+

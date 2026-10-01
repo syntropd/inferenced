@@ -3,3 +3,4 @@
 pub mod arbiter;
 pub mod gang_scheduler;
 pub mod preempt;
+pub mod slice_preempt;
