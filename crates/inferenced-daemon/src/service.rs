@@ -19,6 +19,7 @@ pub fn spawn_slice_preempt_service(
 ) -> JoinHandle<()> {
     tokio::spawn(async move {
         let mut timer = tokio::time::interval(interval);
+        timer.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
         loop {
             timer.tick().await;
             match coordinator.evaluate_and_preempt().await {

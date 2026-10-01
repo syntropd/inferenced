@@ -1,6 +1,6 @@
 {
  "repo": "inferenced",
- "rev": "08276eb",
+ "rev": "93c66c8",
  "dirty": true,
  "pages": [
   {
@@ -145,7 +145,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/schedule/slice_preempt.rs",
-   "lines": 253,
+   "lines": 250,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 1
@@ -348,7 +348,7 @@
   },
   {
    "path": "./crates/inferenced-daemon/src/service.rs",
-   "lines": 89,
+   "lines": 90,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 3

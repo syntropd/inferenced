@@ -8,7 +8,7 @@ use crate::topology::ComputePlaneKind;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 
 pub const DEFAULT_USER_SLICE_PROCS: &str = "/sys/fs/cgroup/user.slice/cgroup.procs";
 pub const DEFAULT_PROC_ROOT: &str = "/proc";
@@ -31,20 +31,10 @@ pub struct SlicePreemptCoordinator {
 
 impl SlicePreemptCoordinator {
     pub fn new(preempt: Arc<PreemptCoordinator>, arbiter: Arc<Arbiter>) -> Self {
-        Self::with_paths(
-            preempt,
-            arbiter,
-            PathBuf::from(DEFAULT_USER_SLICE_PROCS),
-            PathBuf::from(DEFAULT_PROC_ROOT),
-        )
+        Self::with_paths(preempt, arbiter, PathBuf::from(DEFAULT_USER_SLICE_PROCS), PathBuf::from(DEFAULT_PROC_ROOT))
     }
 
-    pub fn with_paths(
-        preempt: Arc<PreemptCoordinator>,
-        arbiter: Arc<Arbiter>,
-        user_slice_procs: PathBuf,
-        proc_root: PathBuf,
-    ) -> Self {
+    pub fn with_paths(preempt: Arc<PreemptCoordinator>, arbiter: Arc<Arbiter>, user_slice_procs: PathBuf, proc_root: PathBuf) -> Self {
         Self { preempt, arbiter, user_slice_procs, proc_root }
     }
 
@@ -91,7 +81,11 @@ impl SlicePreemptCoordinator {
         for entry in entries.flatten() {
             if let Ok(target) = fs::read_link(entry.path()) {
                 let s = target.to_string_lossy();
-                if s.contains("/dev/dri/renderD") || s.contains("renderD") {
+                if s.contains("/dev/dri/renderD")
+                    || s.contains("renderD")
+                    || s.contains("/dev/dri/card")
+                    || s.contains("/dev/kfd")
+                {
                     return true;
                 }
             }
@@ -144,7 +138,10 @@ impl SlicePreemptCoordinator {
                 }
             });
             for (id, res) in futures::future::join_all(tasks).await {
-                if res.is_ok() { preempted.push(id); }
+                match res {
+                    Ok(_) => preempted.push(id),
+                    Err(e) => error!("Failed to preempt background GPU lease {}: {}", id, e),
+                }
             }
         }
 
