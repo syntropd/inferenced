@@ -9,6 +9,14 @@ fn find_inferenctl() -> PathBuf {
     }
     let mut path = std::env::current_exe().unwrap_or_default();
     while path.pop() {
+        if path.file_name().map(|n| n == "deps").unwrap_or(false) {
+            if let Some(parent) = path.parent() {
+                let candidate = parent.join("inferenctl");
+                if candidate.exists() {
+                    return candidate;
+                }
+            }
+        }
         if path.file_name().map(|n| n == "target").unwrap_or(false) {
             let candidate = path.join("debug/inferenctl");
             if candidate.exists() {

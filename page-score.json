@@ -1,6 +1,6 @@
 {
  "repo": "inferenced",
- "rev": "aab4312",
+ "rev": "9b015af",
  "dirty": true,
  "pages": [
   {
@@ -733,7 +733,7 @@
   },
   {
    "path": "./qa/unit/cli_tests.rs",
-   "lines": 169,
+   "lines": 177,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0

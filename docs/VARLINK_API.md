@@ -155,6 +155,10 @@ varlinkctl call unix:/run/systemd-inferenced/io.systemd.inferenced1 \
 ```bash
 varlinkctl call unix:/run/systemd-inferenced/io.systemd.inferenced1 \
   io.systemd.inferenced1.GetDrmWatermark '{}'
+
+# Query watermark for a specific device
+varlinkctl call unix:/run/systemd-inferenced/io.systemd.inferenced1 \
+  io.systemd.inferenced1.GetDrmWatermark '{"device":"renderD128"}'
 ```
 
 ### Stream Real-Time Inference
