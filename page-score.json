@@ -1,7 +1,7 @@
 {
  "repo": "inferenced",
- "rev": "9b015af",
- "dirty": true,
+ "rev": "a8d267f",
+ "dirty": false,
  "pages": [
   {
    "path": "./crates/inferenced-core/src/error.rs",
@@ -516,7 +516,7 @@
   },
   {
    "path": "./qa/edge/faults/cli_edge.rs",
-   "lines": 77,
+   "lines": 119,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -733,7 +733,7 @@
   },
   {
    "path": "./qa/unit/cli_tests.rs",
-   "lines": 177,
+   "lines": 230,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
