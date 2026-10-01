@@ -38,7 +38,7 @@ pub async fn handle_method(
         "ReleaseCompositeLease" => {
             Some(composite_leases::handle_release_composite_lease(params, arbiter, active_leases).await)
         }
-        "ResizeLease" => Some(handle_resize_lease(params, arbiter).await),
+        "ResizeLease" => Some(handle_resize_lease(params, arbiter, active_leases).await),
         "Yield" => Some(leases::handle_yield(params, arbiter).await),
         "Freeze" | "FreezeLease" => Some(leases::handle_freeze(params, arbiter).await),
         "Thaw" | "ThawLease" => Some(leases::handle_thaw(params, arbiter).await),
@@ -188,7 +188,12 @@ fn handle_get_drm_watermark(params: Option<&Value>) -> VarlinkReply {
     VarlinkReply::ok(json!({ "watermarks": list }))
 }
 
-async fn handle_resize_lease(params: Option<&Value>, arbiter: &Arc<Arbiter>) -> VarlinkReply {
+#[allow(clippy::ptr_arg)]
+async fn handle_resize_lease(
+    params: Option<&Value>,
+    arbiter: &Arc<Arbiter>,
+    active_leases: &mut Vec<LeaseId>,
+) -> VarlinkReply {
     let params = match params {
         Some(p) => p,
         None => return VarlinkReply::error("org.varlink.service.InvalidParameter", json!({"parameter": "parameters"})),
@@ -202,6 +207,13 @@ async fn handle_resize_lease(params: Option<&Value>, arbiter: &Arc<Arbiter>) -> 
         Some(m) if m > 0 => m,
         _ => return VarlinkReply::error("org.varlink.service.InvalidParameter", json!({"parameter": "memory_bytes"})),
     };
+
+    if !active_leases.contains(&lease_id) {
+        return VarlinkReply::error(
+            "io.systemd.inferenced1.LeaseNotFound",
+            json!({"lease_id": lease_id.to_string()}),
+        );
+    }
 
     match arbiter.resize_lease(lease_id, mem_bytes).await {
         Ok(lease) => VarlinkReply::ok(json!({

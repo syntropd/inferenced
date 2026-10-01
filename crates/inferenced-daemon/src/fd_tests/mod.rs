@@ -1,9 +1,7 @@
 //! Integration tests for the FD handoff server.
-//!
-//! These tests live in a sibling module so that `fd_server.rs` can
-//! stay under the project's strict 256-LOC file cap.
 
-use super::fd_server::{run_fd_server, run_fd_server_with_quota, FdResponse, FdQuota, MAX_MEMFD_BYTES};
+use crate::fd_quota::FdQuota;
+use crate::fd_server::{run_fd_server, run_fd_server_with_quota, FdResponse, MAX_MEMFD_BYTES};
 use inferenced_core::fd_lease::recv_fd_from_unix;
 use std::sync::Arc;
 use tempfile::tempdir;
@@ -33,14 +31,12 @@ async fn test_fd_server_create_and_unknown_action() {
         let _ = run_fd_server(listener).await;
     });
 
-    // 1. Unknown action receives NUL-terminated error response
     let mut client1 = UnixStream::connect(&sock_path).await.unwrap();
     write_framed(&mut client1, serde_json::json!({ "action": "invalid_cmd" })).await;
     let resp = read_framed_response(&mut client1).await;
     assert_eq!(resp.status, "error");
     assert!(resp.message.unwrap().contains("Unknown action"));
 
-    // 2. Create action passes sealed memfd over SCM_RIGHTS
     let mut client2 = UnixStream::connect(&sock_path).await.unwrap();
     write_framed(
         &mut client2,
@@ -86,13 +82,11 @@ async fn test_fd_server_quota_enforced() {
     let dir = tempdir().unwrap();
     let sock_path = dir.path().join("quota.sock");
     let listener = UnixListener::bind(&sock_path).unwrap();
-    // 1 MiB ceiling so two simultaneous requests must reject.
     let quota = Arc::new(FdQuota::new(1024 * 1024));
     tokio::spawn(async move {
         let _ = run_fd_server_with_quota(listener, quota.clone()).await;
     });
 
-    // First request: 768 KiB, fits alone.
     let mut c1 = UnixStream::connect(&sock_path).await.unwrap();
     write_framed(
         &mut c1,
@@ -104,8 +98,6 @@ async fn test_fd_server_quota_enforced() {
     let (_b, fd1) = recv_fd_from_unix(&c1, &mut buf).unwrap();
     assert!(fd1.is_some(), "first request fits in 1 MiB quota");
 
-    // After the first request the reservation is released on
-    // successful handoff, so a second 768 KiB request also fits.
     let mut c2 = UnixStream::connect(&sock_path).await.unwrap();
     write_framed(
         &mut c2,
@@ -115,15 +107,8 @@ async fn test_fd_server_quota_enforced() {
     c2.readable().await.unwrap();
     let mut buf2 = [0u8; 512];
     let (_b, fd2) = recv_fd_from_unix(&c2, &mut buf2).unwrap();
-    assert!(
-        fd2.is_some(),
-        "second 768 KiB request fits: in-flight semantics release on success"
-    );
+    assert!(fd2.is_some(), "second 768 KiB request fits: in-flight semantics release on success");
 
-    // A third request larger than the 1 MiB quota (1 MiB + 1 byte)
-    // is rejected by the quota check. Note that this also passes the
-    // per-request MAX_MEMFD_BYTES check (16 GiB), so the rejection
-    // comes from the quota, not the size cap.
     let mut c3 = UnixStream::connect(&sock_path).await.unwrap();
     write_framed(
         &mut c3,

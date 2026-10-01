@@ -183,6 +183,18 @@ async fn test_varlink_drm_watermark_and_resize_lease() {
     ).await;
     assert_eq!(shrink_resp["parameters"]["allocated_memory"], 512u64 * 1024 * 1024);
 
+    // 3e. Separate client connection cannot resize lease owned by another connection
+    let mut client2 = UnixStream::connect(&sock).await.unwrap();
+    let unowned_resp = varlink_call(
+        &mut client2,
+        "io.syntrop.Inference1.ResizeLease",
+        json!({
+            "lease_id": lease_id,
+            "memory_bytes": 1024u64 * 1024 * 1024,
+        }),
+    ).await;
+    assert_eq!(unowned_resp["error"], "io.systemd.inferenced1.LeaseNotFound");
+
     // 4. ReleaseLease
     let rel_resp = varlink_call(
         &mut client,

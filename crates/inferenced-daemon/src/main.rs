@@ -6,16 +6,17 @@ mod gateway;
 mod inhibit;
 mod notify;
 mod sentry;
+mod service;
 mod varlink;
 
 #[cfg(test)]
-mod fd_server_tests;
+mod fd_tests;
 
 use activation::{bind_standalone_unix, check_and_adopt_sockets, GatewayListener};
 use clap::Parser;
 use gateway::{build_gateway_router, serve_gateway, AppState};
 use inferenced_core::{
-    arbiter::Arbiter, paging::MemfdPaging, preempt::PreemptCoordinator, topology::HardwareTopology,
+    arbiter::Arbiter, preempt::PreemptCoordinator, topology::HardwareTopology,
 };
 use std::net::SocketAddr;
 use std::path::PathBuf;
@@ -30,19 +31,14 @@ use tracing::{error, info, warn};
 struct Cli {
     #[arg(short, long, default_value = "/etc/systemd/inferenced.conf")]
     config: PathBuf,
-
     #[arg(short, long)]
     bind: Option<SocketAddr>,
-
     #[arg(long, default_value = "/run/syntrop/gateway.sock")]
     gateway_socket: PathBuf,
-
     #[arg(long, default_value = "/run/syntrop/io.syntrop.Inference1")]
     varlink_socket: PathBuf,
-
     #[arg(long, default_value = "/run/syntrop/sentry.sock")]
     sentry_socket: PathBuf,
-
     #[arg(long, default_value = "/run/syntrop/fd.sock")]
     fd_socket: PathBuf,
 }
@@ -73,16 +69,11 @@ async fn main() -> anyhow::Result<()> {
     let preempt = Arc::new(PreemptCoordinator::new(arbiter.clone()));
     let inhibitor = Arc::new(inhibit::InhibitorManager::new());
 
-    // Wire zero-copy paging manager
-    let _ = MemfdPaging;
-
     // 1. Varlink IPC Server (FD 3)
     let varlink_listener = match activated.varlink.take() {
         Some(l) => l,
         None => varlink::bind_or_create_listener(
-            cli.varlink_socket
-                .to_str()
-                .unwrap_or(varlink::DEFAULT_VARLINK_PATH),
+            cli.varlink_socket.to_str().unwrap_or(varlink::DEFAULT_VARLINK_PATH),
         )?,
     };
     let varlink_arbiter = arbiter.clone();
@@ -108,9 +99,7 @@ async fn main() -> anyhow::Result<()> {
     let fd_listener = match activated.fd_server.take() {
         Some(l) => l,
         None => fd_server::bind_or_create_fd_listener(
-            cli.fd_socket
-                .to_str()
-                .unwrap_or(fd_server::DEFAULT_FD_SOCKET_PATH),
+            cli.fd_socket.to_str().unwrap_or(fd_server::DEFAULT_FD_SOCKET_PATH),
         )?,
     };
     tokio::spawn(async move {
@@ -218,9 +207,17 @@ async fn main() -> anyhow::Result<()> {
         }
     });
 
+    // 8. Schedule SlicePreemptCoordinator in inferenced-daemon service loop
+    let (_slice_coord, slice_task) = service::schedule_slice_preemption(
+        preempt.clone(),
+        arbiter.clone(),
+        service::DEFAULT_PREEMPT_INTERVAL,
+    );
+
     serve_gateway(gateway_listener, app, shutdown_signal(inhibitor.clone(), arbiter.clone())).await?;
 
     watchdog_task.abort();
+    slice_task.abort();
     inhibitor.quiesce_for_sleep(&arbiter).await;
     notify::notify_systemd_stopping();
     info!("inferenced daemon terminated cleanly.");
@@ -228,12 +225,10 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn shutdown_signal(inhibitor: Arc<inhibit::InhibitorManager>, arbiter: Arc<Arbiter>) {
-    let mut sigterm = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-        .expect("failed to install SIGTERM handler");
+    let mut sigterm = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()).ok();
     let mut sigcont = tokio::signal::unix::signal(
         tokio::signal::unix::SignalKind::from_raw(rustix::process::Signal::Cont as i32),
-    )
-    .expect("failed to install SIGCONT handler");
+    ).ok();
 
     loop {
         tokio::select! {
@@ -242,12 +237,12 @@ async fn shutdown_signal(inhibitor: Arc<inhibit::InhibitorManager>, arbiter: Arc
                 inhibitor.quiesce_for_sleep(&arbiter).await;
                 break;
             }
-            _ = sigterm.recv() => {
+            _ = async { match sigterm.as_mut() { Some(s) => { s.recv().await; }, None => std::future::pending().await } } => {
                 info!("Termination signal SIGTERM from systemd received, shutting down gracefully...");
                 inhibitor.quiesce_for_sleep(&arbiter).await;
                 break;
             }
-            _ = sigcont.recv() => {
+            _ = async { match sigcont.as_mut() { Some(s) => { s.recv().await; }, None => std::future::pending().await } } => {
                 info!("SIGCONT received from systemd-logind/kernel; resuming model paging...");
                 inhibitor.resume_from_sleep(&arbiter).await;
             }

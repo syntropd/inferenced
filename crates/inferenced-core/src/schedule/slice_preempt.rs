@@ -21,6 +21,7 @@ pub struct SlicePreemptStatus {
 }
 
 /// Binds user session slice activity to GPU compute lease preemption.
+#[derive(Clone)]
 pub struct SlicePreemptCoordinator {
     preempt: Arc<PreemptCoordinator>,
     arbiter: Arc<Arbiter>,
@@ -108,28 +109,42 @@ impl SlicePreemptCoordinator {
 
     /// Evaluate system.slice leases and trigger Tier-1/Tier-2 preemption if user.slice needs GPU
     pub async fn evaluate_and_preempt(&self) -> Result<SlicePreemptStatus> {
-        let interactive_pids = self.scan_interactive_drm_consumers();
-        let mut preempted = Vec::new();
+        let coordinator = self.clone();
+        let interactive_pids = tokio::task::spawn_blocking(move || {
+            coordinator.scan_interactive_drm_consumers()
+        })
+        .await
+        .map_err(|e| crate::error::Error::PreemptionFailed(format!("spawn_blocking error: {e}")))?;
 
+        let mut preempted = Vec::new();
         if !interactive_pids.is_empty() {
             info!("Interactive user session PIDs {:?} hold DRM render nodes", interactive_pids);
             let topo = self.arbiter.get_topology().await;
             let leases = self.arbiter.list_leases().await;
+            let mut candidates = Vec::new();
             for lease in leases {
                 let is_gpu = topo.planes.iter()
                     .find(|p| p.id == lease.plane_id)
                     .map(|p| matches!(p.kind, ComputePlaneKind::DiscreteGpu | ComputePlaneKind::IntegratedUma))
                     .unwrap_or(true);
-                let is_background = lease.client_unit.as_deref().is_some_and(|u| {
+                let is_bg = lease.client_unit.as_deref().is_some_and(|u| {
                     u.contains("system.slice") || u.starts_with("system-")
                 }) || lease.priority == LeasePriority::Batch;
 
-                if is_gpu && is_background && lease.is_active() {
-                    warn!("Preempting background GPU lease {} for interactive user", lease.id);
-                    if self.preempt.preempt_lease(lease.id).await.is_ok() {
-                        preempted.push(lease.id);
-                    }
+                if is_gpu && is_bg && lease.is_active() {
+                    candidates.push(lease.id);
                 }
+            }
+
+            let tasks = candidates.into_iter().map(|id| {
+                let p = self.preempt.clone();
+                async move {
+                    warn!("Preempting background GPU lease {} for interactive user", id);
+                    (id, p.preempt_lease(id).await)
+                }
+            });
+            for (id, res) in futures::future::join_all(tasks).await {
+                if res.is_ok() { preempted.push(id); }
             }
         }
 
@@ -162,10 +177,8 @@ mod tests {
     #[tokio::test]
     async fn test_slice_preempt_background_leases() {
         let dir = tempdir().unwrap();
-        let user_slice_procs = dir.path().join("cgroup.procs");
-        let proc_root = dir.path().join("proc");
+        let (user_slice_procs, proc_root) = (dir.path().join("cgroup.procs"), dir.path().join("proc"));
         fs::write(&user_slice_procs, "4242\n").unwrap();
-
         let fd_dir = proc_root.join("4242/fd");
         fs::create_dir_all(&fd_dir).unwrap();
         let target_dri = dir.path().join("renderD128");
@@ -216,8 +229,7 @@ mod tests {
     #[tokio::test]
     async fn test_slice_preempt_no_interactive_consumers() {
         let dir = tempdir().unwrap();
-        let user_slice_procs = dir.path().join("cgroup.procs");
-        let proc_root = dir.path().join("proc");
+        let (user_slice_procs, proc_root) = (dir.path().join("cgroup.procs"), dir.path().join("proc"));
         fs::write(&user_slice_procs, "1000\n").unwrap();
         let fd_dir = proc_root.join("1000/fd");
         fs::create_dir_all(&fd_dir).unwrap();

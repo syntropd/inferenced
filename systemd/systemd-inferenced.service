@@ -29,8 +29,8 @@ MemoryDenyWriteExecute=yes
 RestrictRealtime=yes
 RestrictSUIDSGID=yes
 LockPersonality=yes
-AmbientCapabilities=CAP_KILL
-CapabilityBoundingSet=CAP_KILL
+AmbientCapabilities=CAP_KILL CAP_SYS_PTRACE
+CapabilityBoundingSet=CAP_KILL CAP_SYS_PTRACE
 
 # Directories
 RuntimeDirectory=systemd-inferenced
