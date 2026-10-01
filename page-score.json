@@ -1,6 +1,6 @@
 {
  "repo": "inferenced",
- "rev": "a8d267f",
+ "rev": "28e7903",
  "dirty": false,
  "pages": [
   {
@@ -516,7 +516,7 @@
   },
   {
    "path": "./qa/edge/faults/cli_edge.rs",
-   "lines": 119,
+   "lines": 128,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -733,7 +733,7 @@
   },
   {
    "path": "./qa/unit/cli_tests.rs",
-   "lines": 230,
+   "lines": 240,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
