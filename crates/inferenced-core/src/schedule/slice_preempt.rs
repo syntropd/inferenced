@@ -4,8 +4,9 @@ use crate::arbiter::Arbiter;
 use crate::error::Result;
 use crate::lease::{LeaseId, LeasePriority};
 use crate::schedule::preempt::PreemptCoordinator;
+use crate::topology::ComputePlaneKind;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tracing::{info, warn};
 
@@ -43,24 +44,40 @@ impl SlicePreemptCoordinator {
         user_slice_procs: PathBuf,
         proc_root: PathBuf,
     ) -> Self {
-        Self {
-            preempt,
-            arbiter,
-            user_slice_procs,
-            proc_root,
+        Self { preempt, arbiter, user_slice_procs, proc_root }
+    }
+
+    fn collect_pids_from_cgroup_dir(dir: &Path, pids: &mut Vec<u32>, depth: usize) {
+        if depth > 5 { return; }
+        if let Ok(c) = fs::read_to_string(dir.join("cgroup.procs")) {
+            pids.extend(c.lines().filter_map(|l| l.trim().parse::<u32>().ok()));
+        }
+        if let Ok(entries) = fs::read_dir(dir) {
+            for entry in entries.flatten() {
+                if entry.file_type().is_ok_and(|ft| ft.is_dir()) {
+                    Self::collect_pids_from_cgroup_dir(&entry.path(), pids, depth + 1);
+                }
+            }
         }
     }
 
-    /// Read PIDs belonging to user.slice
+    /// Read PIDs belonging to user.slice and any delegated child cgroups
     pub fn list_user_slice_pids(&self) -> Vec<u32> {
-        let content = match fs::read_to_string(&self.user_slice_procs) {
-            Ok(c) => c,
-            Err(_) => return Vec::new(),
+        let mut pids = Vec::new();
+        if let Ok(c) = fs::read_to_string(&self.user_slice_procs) {
+            pids.extend(c.lines().filter_map(|l| l.trim().parse::<u32>().ok()));
+        }
+        let base_dir = if self.user_slice_procs.is_dir() {
+            Some(self.user_slice_procs.as_path())
+        } else {
+            self.user_slice_procs.parent().filter(|p| p.is_dir())
         };
-        content
-            .lines()
-            .filter_map(|l| l.trim().parse::<u32>().ok())
-            .collect()
+        if let Some(dir) = base_dir {
+            Self::collect_pids_from_cgroup_dir(dir, &mut pids, 0);
+        }
+        pids.sort_unstable();
+        pids.dedup();
+        pids
     }
 
     /// Detect if a process has opened any DRM render node (/dev/dri/renderD*)
@@ -70,7 +87,6 @@ impl SlicePreemptCoordinator {
             Ok(e) => e,
             Err(_) => return false,
         };
-
         for entry in entries.flatten() {
             if let Ok(target) = fs::read_link(entry.path()) {
                 let s = target.to_string_lossy();
@@ -84,8 +100,8 @@ impl SlicePreemptCoordinator {
 
     /// Scan all user.slice processes and identify those actively holding DRM render nodes
     pub fn scan_interactive_drm_consumers(&self) -> Vec<u32> {
-        let pids = self.list_user_slice_pids();
-        pids.into_iter()
+        self.list_user_slice_pids()
+            .into_iter()
             .filter(|&pid| self.process_has_drm_fd(pid))
             .collect()
     }
@@ -96,22 +112,20 @@ impl SlicePreemptCoordinator {
         let mut preempted = Vec::new();
 
         if !interactive_pids.is_empty() {
-            info!(
-                "Interactive user session processes {:?} opened DRM nodes; evaluating background leases",
-                interactive_pids
-            );
-
+            info!("Interactive user session PIDs {:?} hold DRM render nodes", interactive_pids);
+            let topo = self.arbiter.get_topology().await;
             let leases = self.arbiter.list_leases().await;
             for lease in leases {
+                let is_gpu = topo.planes.iter()
+                    .find(|p| p.id == lease.plane_id)
+                    .map(|p| matches!(p.kind, ComputePlaneKind::DiscreteGpu | ComputePlaneKind::IntegratedUma))
+                    .unwrap_or(true);
                 let is_background = lease.client_unit.as_deref().is_some_and(|u| {
                     u.contains("system.slice") || u.starts_with("system-")
                 }) || lease.priority == LeasePriority::Batch;
 
-                if is_background && lease.is_active() {
-                    warn!(
-                        "Preempting background lease {} ({:?}) in favor of interactive user session",
-                        lease.id, lease.client_unit
-                    );
+                if is_gpu && is_background && lease.is_active() {
+                    warn!("Preempting background GPU lease {} for interactive user", lease.id);
                     if self.preempt.preempt_lease(lease.id).await.is_ok() {
                         preempted.push(lease.id);
                     }
@@ -137,19 +151,10 @@ mod tests {
     fn make_test_topo() -> HardwareTopology {
         let mut topo = HardwareTopology::default();
         topo.planes.push(ComputePlane {
-            id: "plane-gpu-0".into(),
-            name: "Test GPU".into(),
-            kind: ComputePlaneKind::DiscreteGpu,
-            device_path: None,
-            total_memory_bytes: 8 * 1024 * 1024 * 1024,
-            available_memory_bytes: 8 * 1024 * 1024 * 1024,
-            numa_node: None,
-            supported_formats: vec![],
-            is_triage_reserved: false,
-            is_quarantined: false,
-            hardware_features: vec![],
-            p2p_links: None,
-            kernel_used_memory: 0,
+            id: "plane-gpu-0".into(), name: "Test GPU".into(), kind: ComputePlaneKind::DiscreteGpu,
+            device_path: None, total_memory_bytes: 8 * 1024 * 1024 * 1024, available_memory_bytes: 8 * 1024 * 1024 * 1024,
+            numa_node: None, supported_formats: vec![], is_triage_reserved: false, is_quarantined: false,
+            hardware_features: vec![], p2p_links: None, kernel_used_memory: 0,
         });
         topo
     }
@@ -159,11 +164,8 @@ mod tests {
         let dir = tempdir().unwrap();
         let user_slice_procs = dir.path().join("cgroup.procs");
         let proc_root = dir.path().join("proc");
-
-        // Write user.slice PID 4242
         fs::write(&user_slice_procs, "4242\n").unwrap();
 
-        // Create /proc/4242/fd/3 pointing to /dev/dri/renderD128
         let fd_dir = proc_root.join("4242/fd");
         fs::create_dir_all(&fd_dir).unwrap();
         let target_dri = dir.path().join("renderD128");
@@ -172,32 +174,43 @@ mod tests {
 
         let arbiter = Arc::new(Arbiter::new(make_test_topo()));
         let preempt = Arc::new(PreemptCoordinator::new(arbiter.clone()));
+        let bg_lease = arbiter.acquire_lease(
+            LeasePriority::Batch, 1024 * 1024 * 1024, Some("plane-gpu-0".into()),
+            Some("system.slice/background-job.service".into()), Some(9999),
+        ).await.unwrap();
 
-        // Acquire background system.slice lease
-        let bg_lease = arbiter
-            .acquire_lease(
-                LeasePriority::Batch,
-                1024 * 1024 * 1024,
-                Some("plane-gpu-0".into()),
-                Some("system.slice/background-job.service".into()),
-                Some(9999),
-            )
-            .await
-            .unwrap();
-
-        let coordinator = SlicePreemptCoordinator::with_paths(
-            preempt.clone(),
-            arbiter.clone(),
-            user_slice_procs,
-            proc_root,
-        );
-
+        let coordinator = SlicePreemptCoordinator::with_paths(preempt, arbiter.clone(), user_slice_procs, proc_root);
         let status = coordinator.evaluate_and_preempt().await.unwrap();
         assert_eq!(status.interactive_pids, vec![4242]);
         assert_eq!(status.preempted_leases, vec![bg_lease.id]);
+        assert_eq!(arbiter.get_lease(bg_lease.id).await.unwrap().state, LeaseState::Frozen);
+    }
 
-        let updated_lease = arbiter.get_lease(bg_lease.id).await.unwrap();
-        assert_eq!(updated_lease.state, LeaseState::Frozen);
+    #[tokio::test]
+    async fn test_slice_preempt_nested_cgroups() {
+        let dir = tempdir().unwrap();
+        let user_slice_dir = dir.path().join("user.slice");
+        let child_slice = user_slice_dir.join("user-1000.slice/session-1.scope");
+        fs::create_dir_all(&child_slice).unwrap();
+        fs::write(child_slice.join("cgroup.procs"), "5555\n").unwrap();
+        let proc_root = dir.path().join("proc");
+        let fd_dir = proc_root.join("5555/fd");
+        fs::create_dir_all(&fd_dir).unwrap();
+        let target_dri = dir.path().join("renderD129");
+        fs::write(&target_dri, "").unwrap();
+        std::os::unix::fs::symlink(&target_dri, fd_dir.join("7")).unwrap();
+
+        let arbiter = Arc::new(Arbiter::new(make_test_topo()));
+        let preempt = Arc::new(PreemptCoordinator::new(arbiter.clone()));
+        let bg_lease = arbiter.acquire_lease(
+            LeasePriority::Batch, 1024 * 1024 * 1024, Some("plane-gpu-0".into()),
+            Some("system.slice/compute.service".into()), Some(1111),
+        ).await.unwrap();
+
+        let coordinator = SlicePreemptCoordinator::with_paths(preempt, arbiter.clone(), user_slice_dir.join("cgroup.procs"), proc_root);
+        let status = coordinator.evaluate_and_preempt().await.unwrap();
+        assert_eq!(status.interactive_pids, vec![5555]);
+        assert_eq!(status.preempted_leases, vec![bg_lease.id]);
     }
 
     #[tokio::test]
@@ -205,8 +218,6 @@ mod tests {
         let dir = tempdir().unwrap();
         let user_slice_procs = dir.path().join("cgroup.procs");
         let proc_root = dir.path().join("proc");
-
-        // Write user.slice PID 1000 with no DRM fds
         fs::write(&user_slice_procs, "1000\n").unwrap();
         let fd_dir = proc_root.join("1000/fd");
         fs::create_dir_all(&fd_dir).unwrap();
@@ -216,30 +227,15 @@ mod tests {
 
         let arbiter = Arc::new(Arbiter::new(make_test_topo()));
         let preempt = Arc::new(PreemptCoordinator::new(arbiter.clone()));
+        let bg_lease = arbiter.acquire_lease(
+            LeasePriority::Batch, 1024 * 1024 * 1024, Some("plane-gpu-0".into()),
+            Some("system.slice/batch.service".into()), Some(8888),
+        ).await.unwrap();
 
-        let bg_lease = arbiter
-            .acquire_lease(
-                LeasePriority::Batch,
-                1024 * 1024 * 1024,
-                Some("plane-gpu-0".into()),
-                Some("system.slice/batch.service".into()),
-                Some(8888),
-            )
-            .await
-            .unwrap();
-
-        let coordinator = SlicePreemptCoordinator::with_paths(
-            preempt.clone(),
-            arbiter.clone(),
-            user_slice_procs,
-            proc_root,
-        );
-
+        let coordinator = SlicePreemptCoordinator::with_paths(preempt, arbiter.clone(), user_slice_procs, proc_root);
         let status = coordinator.evaluate_and_preempt().await.unwrap();
         assert!(status.interactive_pids.is_empty());
         assert!(status.preempted_leases.is_empty());
-
-        let lease = arbiter.get_lease(bg_lease.id).await.unwrap();
-        assert!(lease.is_active());
+        assert!(arbiter.get_lease(bg_lease.id).await.unwrap().is_active());
     }
 }

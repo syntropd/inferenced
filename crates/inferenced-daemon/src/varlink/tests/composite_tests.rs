@@ -150,6 +150,39 @@ async fn test_varlink_drm_watermark_and_resize_lease() {
     assert_eq!(resize_resp["parameters"]["lease_id"], lease_id);
     assert_eq!(resize_resp["parameters"]["allocated_memory"], 2u64 * 1024 * 1024 * 1024);
 
+    // 3b. ResizeLease exceeding plane capacity -> ResourceExhaustion
+    let oom_resp = varlink_call(
+        &mut client,
+        "io.syntrop.Inference1.ResizeLease",
+        json!({
+            "lease_id": lease_id,
+            "memory_bytes": 100u64 * 1024 * 1024 * 1024,
+        }),
+    ).await;
+    assert_eq!(oom_resp["error"], "io.systemd.inferenced1.ResourceExhaustion");
+
+    // 3c. ResizeLease with unknown lease_id -> LeaseNotFound
+    let notfound_resp = varlink_call(
+        &mut client,
+        "io.syntrop.Inference1.ResizeLease",
+        json!({
+            "lease_id": uuid::Uuid::new_v4().to_string(),
+            "memory_bytes": 1024 * 1024 * 1024,
+        }),
+    ).await;
+    assert_eq!(notfound_resp["error"], "io.systemd.inferenced1.LeaseNotFound");
+
+    // 3d. ResizeLease shrink to 512MB
+    let shrink_resp = varlink_call(
+        &mut client,
+        "io.syntrop.Inference1.ResizeLease",
+        json!({
+            "lease_id": lease_id,
+            "memory_bytes": 512u64 * 1024 * 1024,
+        }),
+    ).await;
+    assert_eq!(shrink_resp["parameters"]["allocated_memory"], 512u64 * 1024 * 1024);
+
     // 4. ReleaseLease
     let rel_resp = varlink_call(
         &mut client,

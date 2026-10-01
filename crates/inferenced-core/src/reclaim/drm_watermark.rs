@@ -199,4 +199,16 @@ mod tests {
         assert!((wm.used_ratio - 0.25).abs() < 1e-4);
         assert_eq!(wm.vram_used_bytes, (wm.vram_total_bytes as f64 * 0.25) as u64);
     }
+
+    #[test]
+    fn test_sample_live_host_drm_watermarks() {
+        let list = sample_drm_watermarks();
+        if Path::new(DEFAULT_DRM_SYSFS_PATH).exists() {
+            for wm in &list {
+                assert!(wm.render_device.starts_with("renderD"));
+                assert!(wm.vram_total_bytes > 0);
+                assert!(wm.used_ratio >= 0.0 && wm.used_ratio <= 1.0);
+            }
+        }
+    }
 }
