@@ -39,6 +39,18 @@ type ModelInfo (
   placement: string
 )
 
+type DrmWatermarkInfo (
+  device: string,
+  vendor: string,
+  vram_used: int,
+  vram_total: int,
+  used_percentage: float,
+  fallback_psi: bool
+)
+
+method GetDrmWatermark(device: ?string) -> (watermarks: []DrmWatermarkInfo)
+method ResizeLease(lease_id: string, memory_bytes: int) -> (lease_id: string, plane_id: string, allocated_memory: int)
+
 method GetTopology() -> (
   planes: []ComputePlane,
   total_ram: int,
@@ -142,6 +154,17 @@ Returns discovered hardware compute planes (DRM GPU, NPU, UMA APU, CPU matrix ex
 Returns Linux Pressure Stall Information (PSI) for CPU, memory, and I/O.
 - `level`: `"Normal"`, `"Moderate"`, or `"Critical"`.
 
+### `GetDrmWatermark`
+Queries hardware VRAM telemetry and watermark saturation levels directly from DRM sysfs or memory subsystems.
+- `device`: Optional filter targeting a specific DRM device name or path (e.g., `"renderD128"` or `"/dev/dri/renderD128"`). If omitted, returns watermarks for all discovered DRM devices.
+- Returns `watermarks: []DrmWatermarkInfo`:
+  - `device`: DRM render device path or identifier.
+  - `vendor`: Hardware vendor string (`"amd"`, `"intel"`, `"nvidia"`, or `"unknown"`).
+  - `vram_used`: Current VRAM consumed in bytes.
+  - `vram_total`: Total physical VRAM capacity in bytes.
+  - `used_percentage`: Fraction of VRAM currently occupied expressed as a percentage (`0.0`–`100.0`).
+  - `fallback_psi`: `true` when physical DRM counters are unavailable and Linux Pressure Stall Information (PSI) heuristic memory metrics are substituted.
+
 ### `AcquireLease`
 Acquires a resource slice on an accelerator plane.
 - `priority`: `"EmergencyTriage"` (weight 100), `"Interactive"` (weight 10), or `"Batch"` (weight 0).
@@ -149,6 +172,19 @@ Acquires a resource slice on an accelerator plane.
 - `plane`: Target plane ID, or `None` for automatic arbitration.
 - `unit`: Calling systemd cgroup unit name (e.g., `user@1000.service`).
 - `pid`: Calling process ID for tracking.
+
+### `ResizeLease`
+Dynamically adjusts the memory allocation ceiling of an existing active compute lease without revoking or restarting the running client.
+- `lease_id`: UUID string of the active compute lease to resize. Must match an active lease owned by the calling client connection.
+- `memory_bytes`: New target memory allocation size in bytes (must be greater than 0).
+- Returns:
+  - `lease_id`: Confirmed lease UUID.
+  - `plane_id`: Compute plane ID hosting the lease.
+  - `allocated_memory`: New confirmed allocation in bytes.
+- Errors:
+  - `org.varlink.service.InvalidParameter`: Invalid UUID format, non-positive `memory_bytes`, or missing parameters.
+  - `io.systemd.inferenced1.LeaseNotFound`: The specified lease UUID does not exist or is not associated with the calling client session.
+  - `io.systemd.inferenced1.ResourceExhaustion`: Plane capacity is insufficient to accommodate the requested expansion.
 
 ### `ReleaseLease`
 Releases an active lease, triggering memory reclamation or unfreezing queued batch workloads.
@@ -188,4 +224,15 @@ varlinkctl call unix:/run/systemd-inferenced/io.systemd.inferenced1 io.systemd.i
 # Acquire an Interactive lease for 1GB
 varlinkctl call unix:/run/systemd-inferenced/io.systemd.inferenced1 io.systemd.inferenced1.AcquireLease \
   '{"priority": "Interactive", "memory_bytes": 1073741824}'
+
+# Query DRM VRAM watermarks across all accelerator devices
+varlinkctl call unix:/run/systemd-inferenced/io.systemd.inferenced1 io.systemd.inferenced1.GetDrmWatermark '{}'
+
+# Query DRM watermark for a specific device
+varlinkctl call unix:/run/systemd-inferenced/io.systemd.inferenced1 io.systemd.inferenced1.GetDrmWatermark \
+  '{"device": "renderD128"}'
+
+# Dynamically resize an active lease to 2GB
+varlinkctl call unix:/run/systemd-inferenced/io.systemd.inferenced1 io.systemd.inferenced1.ResizeLease \
+  '{"lease_id": "c7a8b49e-1f23-4567-89ab-cdef01234567", "memory_bytes": 2147483648}'
 ```

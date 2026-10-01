@@ -53,6 +53,18 @@ type ModelInfo (
   placement: string
 )
 
+type DrmWatermarkInfo (
+  device: string,
+  vendor: string,
+  vram_used: int,
+  vram_total: int,
+  used_percentage: float,
+  fallback_psi: bool
+)
+
+method GetDrmWatermark(device: ?string) -> (watermarks: []DrmWatermarkInfo)
+method ResizeLease(lease_id: string, memory_bytes: int) -> (lease_id: string, plane_id: string, allocated_memory: int)
+
 method GetTopology() -> (
   planes: []ComputePlane,
   total_ram: int,
@@ -130,6 +142,19 @@ varlinkctl call unix:/run/systemd-inferenced/io.systemd.inferenced1 \
 varlinkctl call unix:/run/systemd-inferenced/io.systemd.inferenced1 \
   io.systemd.inferenced1.AcquireLease \
   '{"priority":"Interactive","memory_bytes":2147483648,"unit":"my-inference.service"}'
+```
+
+### Dynamically Resize a Compute Lease
+```bash
+varlinkctl call unix:/run/systemd-inferenced/io.systemd.inferenced1 \
+  io.systemd.inferenced1.ResizeLease \
+  '{"lease_id":"c7a8b49e-1f23-4567-89ab-cdef01234567","memory_bytes":4294967296}'
+```
+
+### Query DRM VRAM Telemetry & Watermarks
+```bash
+varlinkctl call unix:/run/systemd-inferenced/io.systemd.inferenced1 \
+  io.systemd.inferenced1.GetDrmWatermark '{}'
 ```
 
 ### Stream Real-Time Inference
