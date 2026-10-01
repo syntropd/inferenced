@@ -13,10 +13,18 @@ fn workspace_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().map(PathBuf::from).unwrap_or_else(|| PathBuf::from("."))
 }
 
+fn is_stale_bin(bin: &std::path::Path, expected_ver: &str) -> bool {
+    Command::new(bin)
+        .arg("--version")
+        .output()
+        .map(|o| !o.status.success() || !String::from_utf8_lossy(&o.stdout).contains(expected_ver))
+        .unwrap_or(true)
+}
+
 fn find_inferenctl() -> PathBuf {
     if let Ok(cargo_bin) = std::env::var("CARGO_BIN_EXE_inferenctl") {
         let p = PathBuf::from(cargo_bin);
-        if p.exists() {
+        if p.exists() && !is_stale_bin(&p, env!("CARGO_PKG_VERSION")) {
             return p;
         }
     }
@@ -26,8 +34,9 @@ fn find_inferenctl() -> PathBuf {
     } else {
         root.join("target/debug/inferenctl")
     };
-    if !default_candidate.exists() {
+    if !default_candidate.exists() || is_stale_bin(&default_candidate, env!("CARGO_PKG_VERSION")) {
         BUILD_ONCE.call_once(|| {
+            let _ = std::fs::remove_file(&default_candidate);
             let manifest = root.join("Cargo.toml");
             let _ = Command::new("cargo")
                 .args(["build", "-q", "--manifest-path"])
