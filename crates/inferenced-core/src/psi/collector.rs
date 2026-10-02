@@ -4,6 +4,26 @@ use super::ebpf::collect_kernel_telemetry;
 use super::stack_reader::StackPsiReader;
 use super::types::{PressureLevel, PressureMetrics, SIMULATED_PSI};
 use std::path::Path;
+use std::sync::OnceLock;
+
+static ENV_SIMULATED_PSI: OnceLock<Option<PressureLevel>> = OnceLock::new();
+
+fn get_env_simulated_psi() -> Option<PressureLevel> {
+    *ENV_SIMULATED_PSI.get_or_init(|| {
+        std::env::var("INFERENCED_SIMULATE_PSI").ok().and_then(|sim| {
+            let sim_lower = sim.to_ascii_lowercase();
+            if sim_lower == "critical" {
+                Some(PressureLevel::Critical)
+            } else if sim_lower == "elevated" {
+                Some(PressureLevel::Elevated)
+            } else if sim_lower == "normal" {
+                Some(PressureLevel::Normal)
+            } else {
+                None
+            }
+        })
+    })
+}
 
 /// Reads real-time Linux kernel Pressure Stall Information (PSI) and kernel telemetry.
 /// Allocates zero heap bytes during steady-state ticks.
@@ -12,15 +32,8 @@ pub fn read_current() -> PressureMetrics {
         return PressureMetrics::from_level(sim_lvl);
     }
 
-    if let Ok(sim) = std::env::var("INFERENCED_SIMULATE_PSI") {
-        let sim_lower = sim.to_ascii_lowercase();
-        if sim_lower == "critical" {
-            return PressureMetrics::from_level(PressureLevel::Critical);
-        } else if sim_lower == "elevated" {
-            return PressureMetrics::from_level(PressureLevel::Elevated);
-        } else if sim_lower == "normal" {
-            return PressureMetrics::from_level(PressureLevel::Normal);
-        }
+    if let Some(lvl) = get_env_simulated_psi() {
+        return PressureMetrics::from_level(lvl);
     }
 
     let mem = StackPsiReader::read_path(Path::new("/proc/pressure/memory")).unwrap_or_default();

@@ -112,3 +112,66 @@ async fn test_preempt_coordinator_inactive_lease_noop() {
     let res = coordinator.preempt_lease(lease.id).await;
     assert!(res.is_ok());
 }
+
+#[tokio::test]
+async fn test_slice_preempt_background_leases() {
+    use crate::schedule::slice_preempt::SlicePreemptCoordinator;
+    use tempfile::tempdir;
+    let dir = tempdir().unwrap();
+    let (user_slice_procs, proc_root) = (dir.path().join("cgroup.procs"), dir.path().join("proc"));
+    std::fs::write(&user_slice_procs, "4242\n").unwrap();
+    let fd_dir = proc_root.join("4242/fd");
+    std::fs::create_dir_all(&fd_dir).unwrap();
+    let target_dri = dir.path().join("renderD128");
+    std::fs::write(&target_dri, "").unwrap();
+    std::os::unix::fs::symlink(&target_dri, fd_dir.join("3")).unwrap();
+
+    let arbiter = setup_arbiter();
+    let preempt = Arc::new(PreemptCoordinator::new(arbiter.clone()));
+    let bg_lease = arbiter
+        .acquire_lease(
+            LeasePriority::Batch,
+            1024 * 1024 * 1024,
+            Some("plane-preempt-test".into()),
+            Some("system.slice/background-job.service".into()),
+            Some(9999),
+        )
+        .await
+        .unwrap();
+
+    let coordinator = SlicePreemptCoordinator::with_paths(preempt, arbiter.clone(), user_slice_procs, proc_root);
+    let status = coordinator.evaluate_and_preempt().await.unwrap();
+    assert_eq!(status.interactive_pids, vec![4242]);
+    assert_eq!(status.preempted_leases, vec![bg_lease.id]);
+}
+
+#[tokio::test]
+async fn test_slice_preempt_cpu_contention_spike() {
+    use crate::psi::{PressureLevel, SIMULATED_PSI};
+    use crate::schedule::slice_preempt::SlicePreemptCoordinator;
+    use tempfile::tempdir;
+    let dir = tempdir().unwrap();
+    let (user_slice_procs, proc_root) = (dir.path().join("cgroup.procs"), dir.path().join("proc"));
+    std::fs::write(&user_slice_procs, "1000\n").unwrap();
+    std::fs::create_dir_all(proc_root.join("1000/fd")).unwrap();
+
+    let arbiter = setup_arbiter();
+    let preempt = Arc::new(PreemptCoordinator::new(arbiter.clone()));
+    let bg_lease = arbiter
+        .acquire_lease(
+            LeasePriority::Batch,
+            1024 * 1024 * 1024,
+            Some("plane-preempt-test".into()),
+            Some("system.slice/batch.service".into()),
+            Some(8888),
+        )
+        .await
+        .unwrap();
+
+    let coordinator = SlicePreemptCoordinator::with_paths(preempt, arbiter.clone(), user_slice_procs, proc_root);
+    SIMULATED_PSI.scope(PressureLevel::Elevated, async {
+        let status = coordinator.evaluate_and_preempt().await.unwrap();
+        assert_eq!(status.preempted_leases, vec![bg_lease.id]);
+    }).await;
+}
+

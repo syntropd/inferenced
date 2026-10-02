@@ -1,6 +1,6 @@
 {
  "repo": "inferenced",
- "rev": "518a56c",
+ "rev": "47df29d",
  "dirty": true,
  "pages": [
   {
@@ -75,14 +75,14 @@
   },
   {
    "path": "./crates/inferenced-core/src/psi/collector.rs",
-   "lines": 57,
+   "lines": 70,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 2
   },
   {
    "path": "./crates/inferenced-core/src/psi/ebpf.rs",
-   "lines": 149,
+   "lines": 162,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 3
@@ -96,7 +96,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/psi/stack_reader.rs",
-   "lines": 191,
+   "lines": 192,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 2
@@ -173,10 +173,10 @@
   },
   {
    "path": "./crates/inferenced-core/src/schedule/slice_preempt.rs",
-   "lines": 250,
+   "lines": 167,
    "bin_bytes": null,
    "heat_pct": null,
-   "reach": 1
+   "reach": 2
   },
   {
    "path": "./crates/inferenced-core/src/tests/arbiter_tests.rs",
@@ -208,7 +208,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/tests/preempt_tests.rs",
-   "lines": 114,
+   "lines": 177,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
