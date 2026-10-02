@@ -1,7 +1,7 @@
 {
  "repo": "inferenced",
- "rev": "811be7f",
- "dirty": true,
+ "rev": "32dce16",
+ "dirty": false,
  "pages": [
   {
    "path": "./crates/inferenced-core/src/error.rs",
@@ -229,7 +229,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/tests/topology_tests.rs",
-   "lines": 93,
+   "lines": 106,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -250,7 +250,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/topology/drm.rs",
-   "lines": 250,
+   "lines": 251,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 2
@@ -390,7 +390,7 @@
   },
   {
    "path": "./crates/inferenced-daemon/src/varlink/composite_leases.rs",
-   "lines": 171,
+   "lines": 195,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 1
@@ -467,7 +467,7 @@
   },
   {
    "path": "./crates/inferenced-daemon/src/varlink/tests/composite_tests.rs",
-   "lines": 233,
+   "lines": 244,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -859,7 +859,7 @@
   },
   {
    "path": "./qa/unit/preempt_tests.rs",
-   "lines": 222,
+   "lines": 224,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
