@@ -59,6 +59,7 @@ impl RawTuning {
 }
 
 struct TuningCache {
+    last_path: Option<std::path::PathBuf>,
     last_mtime: Option<SystemTime>,
     tuning: DynamicTuning,
 }
@@ -80,31 +81,37 @@ pub fn poll_tuning_from_path(path: &Path) -> DynamicTuning {
     let current_mtime = std::fs::metadata(path).and_then(|m| m.modified()).ok();
 
     if let Some(ref mut cache) = *guard {
-        if cache.last_mtime == current_mtime {
+        if cache.last_path.as_deref() == Some(path) && cache.last_mtime == current_mtime {
             return cache.tuning;
         }
-        cache.last_mtime = current_mtime;
-        if current_mtime.is_some() {
+        cache.last_path = Some(path.to_path_buf());
+        if let Some(mtime) = current_mtime {
             if let Ok(content) = std::fs::read(path) {
                 if let Ok(raw) = serde_json::from_slice::<RawTuning>(&content) {
+                    cache.last_mtime = Some(mtime);
                     cache.tuning = raw.into_dynamic();
                     return cache.tuning;
                 }
             }
+            return cache.tuning;
         }
+        cache.last_mtime = None;
         cache.tuning = DynamicTuning::default();
         cache.tuning
     } else {
         let mut tuning = DynamicTuning::default();
-        if current_mtime.is_some() {
+        let mut loaded_mtime = None;
+        if let Some(mtime) = current_mtime {
             if let Ok(content) = std::fs::read(path) {
                 if let Ok(raw) = serde_json::from_slice::<RawTuning>(&content) {
                     tuning = raw.into_dynamic();
+                    loaded_mtime = Some(mtime);
                 }
             }
         }
         *guard = Some(TuningCache {
-            last_mtime: current_mtime,
+            last_path: Some(path.to_path_buf()),
+            last_mtime: loaded_mtime,
             tuning,
         });
         tuning
@@ -150,7 +157,7 @@ pub fn read_current() -> PressureMetrics {
     let kernel = collect_kernel_telemetry(cpu.some_avg10, io.some_avg10);
 
     let level = if mem.full_avg10 > (tuning.memory_full_threshold as f32)
-        || mem.some_avg10 > 40.0
+        || mem.some_avg10 > (tuning.memory_some_threshold as f32)
         || io.some_avg10 > 50.0
         || kernel.runqueue_latency_us > 100_000
     {
@@ -213,9 +220,22 @@ mod tests {
         let cached = poll_tuning_from_path(&tuning_file);
         assert_eq!(cached, loaded);
 
+        // Malformed write retains last valid tuning and recovers on valid update
+        std::fs::write(&tuning_file, "{ malformed").unwrap();
+        let retained = poll_tuning_from_path(&tuning_file);
+        assert_eq!(retained, loaded);
+        std::fs::write(&tuning_file, aggressive_json).unwrap();
+        let recovered = poll_tuning_from_path(&tuning_file);
+        assert_eq!(recovered, loaded);
+
         // Remove file: reloads and falls back to balanced defaults
         std::fs::remove_file(&tuning_file).unwrap();
         let fallback = poll_tuning_from_path(&tuning_file);
         assert_eq!(fallback, DynamicTuning::default());
+
+        // Alternate path isolation check
+        let other_file = temp_dir.path().join("other.json");
+        assert_eq!(poll_tuning_from_path(&other_file), DynamicTuning::default());
     }
 }
+
