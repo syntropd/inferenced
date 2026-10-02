@@ -58,13 +58,12 @@ impl RawTuning {
     }
 }
 
-struct TuningCache {
-    last_path: Option<std::path::PathBuf>,
+struct CacheEntry {
     last_mtime: Option<SystemTime>,
     tuning: DynamicTuning,
 }
 
-static TUNING_CACHE: Mutex<Option<TuningCache>> = Mutex::new(None);
+static TUNING_CACHE: Mutex<Option<std::collections::HashMap<std::path::PathBuf, CacheEntry>>> = Mutex::new(None);
 
 /// Poll dynamic tuning configuration from `/run/syntrop/tuning.json`.
 pub fn poll_tuning_config() -> DynamicTuning {
@@ -77,27 +76,27 @@ pub fn poll_tuning_from_path(path: &Path) -> DynamicTuning {
         Ok(g) => g,
         Err(poisoned) => poisoned.into_inner(),
     };
+    let map = guard.get_or_insert_with(std::collections::HashMap::new);
 
     let current_mtime = std::fs::metadata(path).and_then(|m| m.modified()).ok();
 
-    if let Some(ref mut cache) = *guard {
-        if cache.last_path.as_deref() == Some(path) && cache.last_mtime == current_mtime {
-            return cache.tuning;
+    if let Some(entry) = map.get_mut(path) {
+        if entry.last_mtime == current_mtime {
+            return entry.tuning;
         }
-        cache.last_path = Some(path.to_path_buf());
         if let Some(mtime) = current_mtime {
             if let Ok(content) = std::fs::read(path) {
                 if let Ok(raw) = serde_json::from_slice::<RawTuning>(&content) {
-                    cache.last_mtime = Some(mtime);
-                    cache.tuning = raw.into_dynamic();
-                    return cache.tuning;
+                    entry.last_mtime = Some(mtime);
+                    entry.tuning = raw.into_dynamic();
+                    return entry.tuning;
                 }
             }
-            return cache.tuning;
+            return entry.tuning;
         }
-        cache.last_mtime = None;
-        cache.tuning = DynamicTuning::default();
-        cache.tuning
+        entry.last_mtime = None;
+        entry.tuning = DynamicTuning::default();
+        entry.tuning
     } else {
         let mut tuning = DynamicTuning::default();
         let mut loaded_mtime = None;
@@ -109,8 +108,7 @@ pub fn poll_tuning_from_path(path: &Path) -> DynamicTuning {
                 }
             }
         }
-        *guard = Some(TuningCache {
-            last_path: Some(path.to_path_buf()),
+        map.insert(path.to_path_buf(), CacheEntry {
             last_mtime: loaded_mtime,
             tuning,
         });
