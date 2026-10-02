@@ -18,6 +18,13 @@ pub enum Error {
     #[error("Memory bus saturation / Pressure stall critical: {0}")]
     BusSaturation(String),
 
+    #[error("Hardware incompatible with requested workload: {deficit}")]
+    HardwareIncompatible {
+        deficit: String,
+        estimated_cpu_latency_secs: f64,
+        suggested_alternatives: Vec<String>,
+    },
+
     #[error("Lease not found: {0}")]
     LeaseNotFound(String),
 

@@ -88,15 +88,27 @@ impl Arbiter {
         Ok(())
     }
 
+    /// Acquire a compute slice lease with optional workload classification.
+    pub async fn acquire_lease_with_workload(
+        &self, priority: LeasePriority, required_bytes: u64, preferred_plane: Option<String>,
+        client_unit: Option<String>, client_pid: Option<u32>, workload: Option<crate::topology::WorkloadKind>,
+    ) -> Result<ComputeLease> {
+        Self::check_psi_throttle(priority)?;
+        if let Some(w) = workload {
+            let topo = self.get_topology().await;
+            super::enforce_workload::check_workload_compatibility(&topo, w)?;
+        }
+        let mut state = self.state.write().await;
+        let ArbiterState { ref mut topology, ref mut leases, .. } = *state;
+        gang_scheduler::allocate_single(topology, leases, priority, required_bytes, preferred_plane, client_unit, client_pid)
+    }
+
     /// Acquire a compute slice lease. Handles preemption and Sentry emergency bypass.
     pub async fn acquire_lease(
         &self, priority: LeasePriority, required_bytes: u64, preferred_plane: Option<String>,
         client_unit: Option<String>, client_pid: Option<u32>,
     ) -> Result<ComputeLease> {
-        Self::check_psi_throttle(priority)?;
-        let mut state = self.state.write().await;
-        let ArbiterState { ref mut topology, ref mut leases, .. } = *state;
-        gang_scheduler::allocate_single(topology, leases, priority, required_bytes, preferred_plane, client_unit, client_pid)
+        self.acquire_lease_with_workload(priority, required_bytes, preferred_plane, client_unit, client_pid, None).await
     }
 
     /// Acquire a composite gang lease across multiple planes atomically.
@@ -189,10 +201,8 @@ impl Arbiter {
                 return Err(Error::ResourceExhaustion { plane: lease.plane_id.clone(), requested_bytes: req, available_bytes: plane.available_memory_bytes });
             }
             if is_uma {
-                if let Some(cpu) = topology.planes.iter().find(|p| p.kind == ComputePlaneKind::CpuMatrixExtension) {
-                    if cpu.available_memory_bytes < req {
-                        return Err(Error::ResourceExhaustion { plane: cpu.id.clone(), requested_bytes: req, available_bytes: cpu.available_memory_bytes });
-                    }
+                if let Some(cpu) = topology.planes.iter().find(|p| p.kind == ComputePlaneKind::CpuMatrixExtension && p.available_memory_bytes < req) {
+                    return Err(Error::ResourceExhaustion { plane: cpu.id.clone(), requested_bytes: req, available_bytes: cpu.available_memory_bytes });
                 }
             }
             gang_scheduler::deduct_plane_memory(topology, &lease.plane_id, req);
@@ -217,18 +227,14 @@ impl Arbiter {
                 .ok_or_else(|| Error::PlaneNotFound(lease.plane_id.clone()))?;
             if plane.available_memory_bytes < diff {
                 return Err(Error::ResourceExhaustion {
-                    plane: lease.plane_id.clone(),
-                    requested_bytes: diff,
-                    available_bytes: plane.available_memory_bytes,
+                    plane: lease.plane_id.clone(), requested_bytes: diff, available_bytes: plane.available_memory_bytes,
                 });
             }
             if plane.kind == ComputePlaneKind::IntegratedUma {
                 if let Some(cpu) = topology.planes.iter().find(|p| p.kind == ComputePlaneKind::CpuMatrixExtension) {
                     if cpu.available_memory_bytes < diff {
                         return Err(Error::ResourceExhaustion {
-                            plane: cpu.id.clone(),
-                            requested_bytes: diff,
-                            available_bytes: cpu.available_memory_bytes,
+                            plane: cpu.id.clone(), requested_bytes: diff, available_bytes: cpu.available_memory_bytes,
                         });
                     }
                 }

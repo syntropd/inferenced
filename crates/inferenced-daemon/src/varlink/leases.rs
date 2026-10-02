@@ -46,6 +46,11 @@ pub async fn handle_acquire_lease(
         .and_then(|v| v.as_str())
         .map(ToString::to_string);
     let pid = params.get("pid").and_then(|v| v.as_u64()).map(|p| p as u32);
+    let workload = params
+        .get("workload")
+        .or_else(|| params.get("workload_kind"))
+        .and_then(|v| v.as_str())
+        .and_then(|s| s.parse::<inferenced_core::topology::WorkloadKind>().ok());
 
     // Secure peer attribution: Use verified peer credentials and cgroup slice
     let (verified_unit, verified_pid, priority) = if let Some(peer) = peer_info {
@@ -60,7 +65,7 @@ pub async fn handle_acquire_lease(
     };
 
     match arbiter
-        .acquire_lease(priority, mem_bytes, plane, verified_unit, verified_pid)
+        .acquire_lease_with_workload(priority, mem_bytes, plane, verified_unit, verified_pid, workload)
         .await
     {
         Ok(lease) => {
@@ -71,6 +76,18 @@ pub async fn handle_acquire_lease(
                 "allocated_memory": lease.allocated_memory_bytes,
             }))
         }
+        Err(inferenced_core::Error::HardwareIncompatible {
+            deficit,
+            estimated_cpu_latency_secs,
+            suggested_alternatives,
+        }) => VarlinkReply::error(
+            "io.syntrop.Inference1.HardwareIncompatible",
+            json!({
+                "deficit": deficit,
+                "estimated_cpu_latency_secs": estimated_cpu_latency_secs,
+                "suggested_alternatives": suggested_alternatives,
+            }),
+        ),
         Err(e) => VarlinkReply::error(
             "io.systemd.inferenced1.ResourceExhaustion",
             json!({"error": e.to_string()}),

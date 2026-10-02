@@ -61,3 +61,66 @@ pub struct HardwareTopology {
     pub cpu_cores_total: usize,
     pub numa_nodes: usize,
 }
+
+impl HardwareTopology {
+    /// Sum of total GPU memory across all discrete GPU planes.
+    pub fn discrete_gpu_vram(&self) -> u64 {
+        self.planes
+            .iter()
+            .filter(|p| p.kind == ComputePlaneKind::DiscreteGpu)
+            .map(|p| p.total_memory_bytes)
+            .sum()
+    }
+}
+
+/// Workload classification for pre-flight hardware compatibility gating.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum WorkloadKind {
+    TextDraft,
+    TextPrimary,
+    AudioSpeech,
+    VisualDraft,
+    VisualHighRes,
+    VideoTemporal,
+}
+
+impl WorkloadKind {
+    /// Whether this workload requires dedicated discrete GPU acceleration.
+    pub fn is_heavy(&self) -> bool {
+        matches!(self, Self::VisualHighRes | Self::VideoTemporal)
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::TextDraft => "TextDraft",
+            Self::TextPrimary => "TextPrimary",
+            Self::AudioSpeech => "AudioSpeech",
+            Self::VisualDraft => "VisualDraft",
+            Self::VisualHighRes => "VisualHighRes",
+            Self::VideoTemporal => "VideoTemporal",
+        }
+    }
+}
+
+impl std::str::FromStr for WorkloadKind {
+    type Err = String;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        let norm: String = s.chars().filter(|c| c.is_alphanumeric()).collect();
+        match norm.to_ascii_lowercase().as_str() {
+            "textdraft" | "draft" => Ok(Self::TextDraft),
+            "textprimary" | "text" | "primary" => Ok(Self::TextPrimary),
+            "audiospeech" | "audio" | "speech" | "tts" => Ok(Self::AudioSpeech),
+            "visualdraft" | "visual" => Ok(Self::VisualDraft),
+            "visualhighres" | "highres" => Ok(Self::VisualHighRes),
+            "videotemporal" | "video" => Ok(Self::VideoTemporal),
+            other => Err(format!("unknown workload kind: {other}")),
+        }
+    }
+}
+
+impl std::fmt::Display for WorkloadKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}

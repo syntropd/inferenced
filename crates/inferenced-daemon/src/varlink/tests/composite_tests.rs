@@ -203,3 +203,31 @@ async fn test_varlink_drm_watermark_and_resize_lease() {
     ).await;
     assert!(rel_resp["parameters"].is_object());
 }
+
+#[tokio::test]
+async fn test_varlink_acquire_lease_hardware_incompatible_cpu_only() {
+    let dir = tempdir().unwrap();
+    let sock = dir.path().join("varlink_compat_test.sock");
+    let listener = bind_or_create_listener(sock.to_str().unwrap()).unwrap();
+    let topo = HardwareTopology::default();
+    let arbiter = Arc::new(Arbiter::new(topo));
+
+    tokio::spawn(async move {
+        let _ = run_varlink_listener(listener, arbiter).await;
+    });
+
+    let mut client = UnixStream::connect(&sock).await.unwrap();
+    let resp = varlink_call(
+        &mut client,
+        "io.syntrop.Inference1.AcquireLease",
+        json!({
+            "priority": "Interactive",
+            "memory_bytes": 1024 * 1024 * 1024,
+            "workload": "VideoTemporal"
+        }),
+    ).await;
+
+    assert_eq!(resp["error"], "io.syntrop.Inference1.HardwareIncompatible");
+    assert!(resp["parameters"]["deficit"].as_str().unwrap().contains("discrete GPU VRAM"));
+    assert!(!resp["parameters"]["suggested_alternatives"].as_array().unwrap().is_empty());
+}

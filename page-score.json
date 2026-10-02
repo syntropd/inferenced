@@ -1,14 +1,14 @@
 {
  "repo": "inferenced",
- "rev": "398504d",
- "dirty": false,
+ "rev": "811be7f",
+ "dirty": true,
  "pages": [
   {
    "path": "./crates/inferenced-core/src/error.rs",
-   "lines": 55,
+   "lines": 62,
    "bin_bytes": null,
    "heat_pct": null,
-   "reach": 19
+   "reach": 20
   },
   {
    "path": "./crates/inferenced-core/src/fd_lease.rs",
@@ -145,10 +145,17 @@
   },
   {
    "path": "./crates/inferenced-core/src/schedule/arbiter.rs",
-   "lines": 249,
+   "lines": 255,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 42
+  },
+  {
+   "path": "./crates/inferenced-core/src/schedule/enforce_workload.rs",
+   "lines": 122,
+   "bin_bytes": null,
+   "heat_pct": null,
+   "reach": 2
   },
   {
    "path": "./crates/inferenced-core/src/schedule/gang_scheduler.rs",
@@ -159,7 +166,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/schedule/mod.rs",
-   "lines": 6,
+   "lines": 9,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -278,7 +285,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/topology/types.rs",
-   "lines": 63,
+   "lines": 126,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 7
@@ -383,7 +390,7 @@
   },
   {
    "path": "./crates/inferenced-daemon/src/varlink/composite_leases.rs",
-   "lines": 159,
+   "lines": 171,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 1
@@ -404,7 +411,7 @@
   },
   {
    "path": "./crates/inferenced-daemon/src/varlink/leases.rs",
-   "lines": 163,
+   "lines": 180,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 1
@@ -460,7 +467,7 @@
   },
   {
    "path": "./crates/inferenced-daemon/src/varlink/tests/composite_tests.rs",
-   "lines": 205,
+   "lines": 233,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0

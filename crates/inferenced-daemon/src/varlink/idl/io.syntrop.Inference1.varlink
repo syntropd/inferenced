@@ -81,7 +81,8 @@ method AcquireLease(
   memory_bytes: int,
   plane: ?string,
   unit: ?string,
-  pid: ?int
+  pid: ?int,
+  workload: ?string
 ) -> (
   lease_id: string,
   plane_id: string,
@@ -90,7 +91,7 @@ method AcquireLease(
 
 type SliceReq (role: string, memory_bytes: int, plane: ?string)
 type SliceAlloc (plane_id: string, role: string, allocated_memory: int, numa_node: ?int, device_path: ?string)
-method AcquireCompositeLease(priority: string, policy: ?string, slices: []SliceReq, unit: ?string, pid: ?int) -> (lease_id: string, slices: []SliceAlloc, priority: string, policy: string)
+method AcquireCompositeLease(priority: string, policy: ?string, slices: []SliceReq, unit: ?string, pid: ?int, workload: ?string) -> (lease_id: string, slices: []SliceAlloc, priority: string, policy: string)
 method ReleaseCompositeLease(lease_id: string) -> ()
 method ReleaseLease(lease_id: string) -> ()
 method Yield(lease_id: string) -> ()
@@ -120,6 +121,7 @@ method StreamInference(
 error MethodNotFound (method: string)
 error InvalidParameter (parameter: string)
 error ResourceExhaustion (plane: string, requested: int, available: int)
+error HardwareIncompatible (deficit: string, estimated_cpu_latency_secs: float, suggested_alternatives: []string)
 error PlaneNotFound (plane: string)
 error LeaseNotFound (lease_id: string)
 error ModelNotFound (model: string)

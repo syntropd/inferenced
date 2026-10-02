@@ -7,7 +7,7 @@ pub mod triage;
 pub mod types;
 
 pub use affinity::{gang_affinity_score, numa_distance, pcie_hop_distance, topology_distance};
-pub use types::{ComputePlane, ComputePlaneKind, DeviceLink, HardwareTopology, LinkType};
+pub use types::{ComputePlane, ComputePlaneKind, DeviceLink, HardwareTopology, LinkType, WorkloadKind};
 
 use crate::error::Result;
 
