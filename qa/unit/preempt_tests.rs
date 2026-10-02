@@ -28,17 +28,19 @@ fn make_test_arbiter(capacity_bytes: u64) -> Arbiter {
 
 #[tokio::test]
 async fn test_preempt_cooperative_yield_state_transition() {
-    let arbiter = make_test_arbiter(8 * 1024 * 1024 * 1024);
-    let lease = arbiter
-        .acquire_lease(LeasePriority::Batch, 2 * 1024 * 1024 * 1024, None, None, None)
-        .await
-        .expect("Acquire should succeed");
+    inferenced_core::psi::SIMULATED_PSI.scope(inferenced_core::psi::PressureLevel::Normal, async {
+        let arbiter = make_test_arbiter(8 * 1024 * 1024 * 1024);
+        let lease = arbiter
+            .acquire_lease(LeasePriority::Batch, 2 * 1024 * 1024 * 1024, None, None, None)
+            .await
+            .expect("Acquire should succeed");
 
-    assert_eq!(lease.state, LeaseState::Active);
-    arbiter.yield_lease(lease.id).await.expect("Yield should succeed");
+        assert_eq!(lease.state, LeaseState::Active);
+        arbiter.yield_lease(lease.id).await.expect("Yield should succeed");
 
-    let updated = arbiter.get_lease(lease.id).await.expect("Lease exists");
-    assert_eq!(updated.state, LeaseState::Preempting);
+        let updated = arbiter.get_lease(lease.id).await.expect("Lease exists");
+        assert_eq!(updated.state, LeaseState::Preempting);
+    }).await;
 }
 
 #[tokio::test]

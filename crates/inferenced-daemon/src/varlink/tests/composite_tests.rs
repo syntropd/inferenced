@@ -230,4 +230,15 @@ async fn test_varlink_acquire_lease_hardware_incompatible_cpu_only() {
     assert_eq!(resp["error"], "io.syntrop.Inference1.HardwareIncompatible");
     assert!(resp["parameters"]["deficit"].as_str().unwrap().contains("discrete GPU VRAM"));
     assert!(!resp["parameters"]["suggested_alternatives"].as_array().unwrap().is_empty());
+
+    let resp_comp = varlink_call(
+        &mut client,
+        "io.syntrop.Inference1.AcquireCompositeLease",
+        json!({
+            "priority": "Interactive",
+            "slices": [{ "role": "Primary", "memory_bytes": 1024 * 1024 * 1024 }],
+            "workload": "VideoTemporal"
+        }),
+    ).await;
+    assert_eq!(resp_comp["error"], "io.syntrop.Inference1.HardwareIncompatible");
 }

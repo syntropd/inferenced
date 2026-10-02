@@ -28,6 +28,19 @@ fn test_drm_sysfs_parsing_mock() {
 }
 
 #[test]
+fn test_drm_sysfs_amd_apu_mock() {
+    let dir = tempdir().unwrap();
+    let dev_dir = dir.path().join("device");
+    fs::create_dir_all(&dev_dir).unwrap();
+    fs::write(dev_dir.join("vendor"), "0x1002\n").unwrap();
+    fs::write(dev_dir.join("mem_info_vram_total"), "536870912\n").unwrap(); // 512MB APU slice
+
+    let (vendor, integrated, _vram, _used, _bw) = drm::inspect_drm_sysfs(dir.path(), 16 * 1024 * 1024 * 1024);
+    assert_eq!(vendor, "Advanced Micro Devices [AMD/ATI]");
+    assert!(integrated, "AMD APU with <=2GB VRAM must be recognized as integrated UMA");
+}
+
+#[test]
 fn test_npu_discovery_mock() {
     let dir = tempdir().unwrap();
     let accel_dir = dir.path().join("accel");

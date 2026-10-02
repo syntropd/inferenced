@@ -204,7 +204,8 @@ pub fn inspect_drm_sysfs(sysfs_card: &Path, total_system_ram: u64) -> (String, b
     let vram_path = device_dir.join("mem_info_vram_total");
     if let Ok(vram_str) = fs::read_to_string(vram_path) {
         if let Ok(vram_bytes) = vram_str.trim().parse::<u64>() {
-            if vram_bytes > 0 {
+            let is_apu = vendor == "0x1002" && vram_bytes < 3 * 1024 * 1024 * 1024;
+            if vram_bytes > 0 && !is_apu {
                 return (vendor_name.into(), false, vram_bytes, vram_used, pcie_bw);
             }
         }
@@ -215,7 +216,7 @@ pub fn inspect_drm_sysfs(sysfs_card: &Path, total_system_ram: u64) -> (String, b
         return (vendor_name.into(), false, bar_vram, vram_used, pcie_bw);
     }
 
-    let is_integrated = vendor == "0x8086" || vendor.is_empty();
+    let is_integrated = vendor == "0x8086" || vendor == "0x1002" || vendor.is_empty();
     let uma_slice = (total_system_ram / 2).max(1024 * 1024 * 1024);
     (vendor_name.into(), is_integrated, uma_slice, vram_used, pcie_bw)
 }

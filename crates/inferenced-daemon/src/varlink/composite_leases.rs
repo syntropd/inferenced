@@ -64,6 +64,30 @@ pub async fn handle_acquire_composite_lease(
     };
 
     let req = CompositeLeaseRequest::new(slices, priority, policy, verified_unit, verified_pid);
+    let workload = params
+        .get("workload")
+        .or_else(|| params.get("workload_kind"))
+        .and_then(|v| v.as_str())
+        .and_then(|s| s.parse::<inferenced_core::topology::WorkloadKind>().ok());
+
+    if let Some(w) = workload {
+        let topo = arbiter.get_topology().await;
+        if let Err(inferenced_core::Error::HardwareIncompatible {
+            deficit,
+            estimated_cpu_latency_secs,
+            suggested_alternatives,
+        }) = inferenced_core::schedule::check_workload_compatibility(&topo, w) {
+            return VarlinkReply::error(
+                "io.syntrop.Inference1.HardwareIncompatible",
+                json!({
+                    "deficit": deficit,
+                    "estimated_cpu_latency_secs": estimated_cpu_latency_secs,
+                    "suggested_alternatives": suggested_alternatives,
+                }),
+            );
+        }
+    }
+
     match arbiter.acquire_composite_lease(req).await {
         Ok(lease) => {
             active_leases.push(lease.id);
