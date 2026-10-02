@@ -1,7 +1,7 @@
 {
  "repo": "inferenced",
- "rev": "47df29d",
- "dirty": true,
+ "rev": "1adf22c",
+ "dirty": false,
  "pages": [
   {
    "path": "./crates/inferenced-core/src/error.rs",
@@ -75,7 +75,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/psi/collector.rs",
-   "lines": 70,
+   "lines": 221,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 2
