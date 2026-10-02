@@ -1,6 +1,6 @@
 {
  "repo": "inferenced",
- "rev": "8eb7f8b",
+ "rev": "398504d",
  "dirty": false,
  "pages": [
   {
@@ -75,7 +75,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/psi/collector.rs",
-   "lines": 241,
+   "lines": 239,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 2
