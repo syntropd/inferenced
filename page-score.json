@@ -1,7 +1,7 @@
 {
  "repo": "inferenced",
- "rev": "28e7903",
- "dirty": false,
+ "rev": "518a56c",
+ "dirty": true,
  "pages": [
   {
    "path": "./crates/inferenced-core/src/error.rs",
@@ -74,11 +74,39 @@
    "reach": 1
   },
   {
-   "path": "./crates/inferenced-core/src/psi.rs",
-   "lines": 121,
+   "path": "./crates/inferenced-core/src/psi/collector.rs",
+   "lines": 57,
    "bin_bytes": null,
    "heat_pct": null,
-   "reach": 9
+   "reach": 2
+  },
+  {
+   "path": "./crates/inferenced-core/src/psi/ebpf.rs",
+   "lines": 149,
+   "bin_bytes": null,
+   "heat_pct": null,
+   "reach": 3
+  },
+  {
+   "path": "./crates/inferenced-core/src/psi/mod.rs",
+   "lines": 11,
+   "bin_bytes": null,
+   "heat_pct": null,
+   "reach": 0
+  },
+  {
+   "path": "./crates/inferenced-core/src/psi/stack_reader.rs",
+   "lines": 191,
+   "bin_bytes": null,
+   "heat_pct": null,
+   "reach": 2
+  },
+  {
+   "path": "./crates/inferenced-core/src/psi/types.rs",
+   "lines": 81,
+   "bin_bytes": null,
+   "heat_pct": null,
+   "reach": 2
   },
   {
    "path": "./crates/inferenced-core/src/reclaim/drm_watermark.rs",
@@ -187,7 +215,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/tests/psi_tests.rs",
-   "lines": 47,
+   "lines": 76,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -390,7 +418,7 @@
   },
   {
    "path": "./crates/inferenced-daemon/src/varlink/mod.rs",
-   "lines": 121,
+   "lines": 125,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -400,11 +428,32 @@
    "lines": 81,
    "bin_bytes": null,
    "heat_pct": null,
-   "reach": 6
+   "reach": 7
   },
   {
    "path": "./crates/inferenced-daemon/src/varlink/service.rs",
-   "lines": 45,
+   "lines": 49,
+   "bin_bytes": null,
+   "heat_pct": null,
+   "reach": 1
+  },
+  {
+   "path": "./crates/inferenced-daemon/src/varlink/telemetry/interface.rs",
+   "lines": 25,
+   "bin_bytes": null,
+   "heat_pct": null,
+   "reach": 1
+  },
+  {
+   "path": "./crates/inferenced-daemon/src/varlink/telemetry/mod.rs",
+   "lines": 7,
+   "bin_bytes": null,
+   "heat_pct": null,
+   "reach": 0
+  },
+  {
+   "path": "./crates/inferenced-daemon/src/varlink/telemetry/telemetry1.rs",
+   "lines": 37,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 1

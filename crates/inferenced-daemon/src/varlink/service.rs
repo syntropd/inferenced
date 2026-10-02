@@ -13,7 +13,8 @@ pub fn handle_get_info() -> VarlinkReply {
         "interfaces": [
             "org.varlink.service",
             "io.syntrop.Inference1",
-            "io.systemd.inferenced1"
+            "io.systemd.inferenced1",
+            "io.syntrop.Telemetry1"
         ]
     }))
 }
@@ -32,6 +33,9 @@ pub fn handle_get_interface_description(params: Option<&Value>) -> VarlinkReply 
         })),
         Some("io.systemd.inferenced1") => VarlinkReply::ok(json!({
             "description": IO_SYSTEMD_INFERENCED1_IDL
+        })),
+        Some("io.syntrop.Telemetry1") => VarlinkReply::ok(json!({
+            "description": super::telemetry::IO_SYNTROP_TELEMETRY1_IDL
         })),
         Some(unknown) => VarlinkReply::error(
             "org.varlink.service.InterfaceNotFound",

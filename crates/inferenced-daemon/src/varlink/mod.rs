@@ -5,6 +5,7 @@ pub mod leases;
 pub mod models;
 pub mod protocol;
 pub mod service;
+pub mod telemetry;
 
 #[cfg(test)]
 mod tests;
@@ -60,6 +61,9 @@ pub async fn run_varlink_listener(
                             "org.varlink.service.GetInfo" => Some(service::handle_get_info()),
                             "org.varlink.service.GetInterfaceDescription" => {
                                 Some(service::handle_get_interface_description(params))
+                            }
+                            _ if method.starts_with("io.syntrop.Telemetry1.") => {
+                                telemetry::handle_telemetry_method(method)
                             }
                             _ => {
                                 inferenced1::handle_method(
