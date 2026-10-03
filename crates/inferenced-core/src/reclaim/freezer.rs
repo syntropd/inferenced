@@ -59,22 +59,27 @@ pub fn thaw_process_signal(pid: u32) -> Result<()> {
 }
 
 fn resolve_freeze_path(path: &Path) -> PathBuf {
-    if path.is_absolute() {
+    if path.starts_with(CGROUP_ROOT) {
         if path.ends_with("cgroup.freeze") {
             path.to_path_buf()
         } else {
             path.join("cgroup.freeze")
         }
+    } else if path.ends_with("cgroup.freeze") && path.exists() {
+        path.to_path_buf()
+    } else if path.is_absolute() && path.join("cgroup.freeze").exists() {
+        path.join("cgroup.freeze")
     } else {
-        let direct = Path::new(CGROUP_ROOT).join(path).join("cgroup.freeze");
+        let rel_path = path.strip_prefix("/").unwrap_or(path);
+        let direct = Path::new(CGROUP_ROOT).join(rel_path).join("cgroup.freeze");
         if direct.exists() {
             return direct;
         }
-        if let Some(s) = path.to_str() {
+        if let Some(s) = rel_path.to_str() {
             if let Some((parent, _)) = s.split_once('-') {
                 let nested = Path::new(CGROUP_ROOT)
                     .join(format!("{parent}.slice"))
-                    .join(path)
+                    .join(rel_path)
                     .join("cgroup.freeze");
                 if nested.exists() {
                     return nested;

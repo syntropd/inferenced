@@ -112,8 +112,7 @@ impl SlicePreemptCoordinator {
 
         let psi = crate::psi::PressureMetrics::read_current();
         let cpu_contention = psi.runqueue_latency_us > 30_000
-            || psi.cpu_some_avg10 > 50.0
-            || psi.level != crate::psi::PressureLevel::Normal;
+            || psi.cpu_some_avg10 > 50.0;
 
         let mut preempted = Vec::new();
         if !interactive_pids.is_empty() || cpu_contention {
@@ -134,9 +133,17 @@ impl SlicePreemptCoordinator {
                     .find(|p| p.id == lease.plane_id)
                     .map(|p| matches!(p.kind, ComputePlaneKind::DiscreteGpu | ComputePlaneKind::IntegratedUma))
                     .unwrap_or(true);
-                let is_bg = lease.client_unit.as_deref().is_some_and(|u| {
-                    u.contains("system.slice") || u.starts_with("system-")
-                }) || lease.priority == LeasePriority::Batch;
+                let is_runtimed = lease.client_unit.as_deref().is_some_and(|u| u.contains("runtimed"));
+                let is_bg = if is_runtimed {
+                    !interactive_pids.is_empty() && lease.priority == LeasePriority::Batch
+                } else {
+                    lease.priority == LeasePriority::Batch
+                        || (lease.priority != LeasePriority::EmergencyTriage
+                            && lease.priority != LeasePriority::Interactive
+                            && lease.client_unit.as_deref().is_some_and(|u| {
+                                u.contains("system.slice") || u.starts_with("system-")
+                            }))
+                };
 
                 if is_gpu && is_bg && lease.is_active() {
                     candidates.push(lease.id);

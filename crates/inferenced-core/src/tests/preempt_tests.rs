@@ -168,3 +168,57 @@ async fn test_slice_preempt_cpu_contention_spike() {
     }).await;
 }
 
+#[tokio::test]
+async fn test_slice_preempt_runtimed_immunity_and_batch() {
+    use crate::psi::{PressureLevel, SIMULATED_PSI};
+    use crate::schedule::slice_preempt::SlicePreemptCoordinator;
+    use tempfile::tempdir;
+    let dir = tempdir().unwrap();
+    let (user_slice_procs, proc_root) = (dir.path().join("cgroup.procs"), dir.path().join("proc"));
+    std::fs::write(&user_slice_procs, "5000\n").unwrap();
+    let fd_dir = proc_root.join("5000/fd");
+    std::fs::create_dir_all(&fd_dir).unwrap();
+    let target_dri = dir.path().join("renderD128");
+    std::fs::write(&target_dri, "").unwrap();
+    std::os::unix::fs::symlink(&target_dri, fd_dir.join("4")).unwrap();
+
+    let arbiter = setup_arbiter();
+    let preempt = Arc::new(PreemptCoordinator::new(arbiter.clone()));
+    let interactive_lease = arbiter
+        .acquire_lease(
+            LeasePriority::Interactive,
+            1024 * 1024 * 1024,
+            Some("plane-preempt-test".into()),
+            Some("/system.slice/runtimed.service".into()),
+            Some(7777),
+        )
+        .await
+        .unwrap();
+
+    let coordinator = SlicePreemptCoordinator::with_paths(preempt.clone(), arbiter.clone(), user_slice_procs.clone(), proc_root.clone());
+    // Interactive runtimed lease must NEVER be preempted even during DRM activity and contention
+    SIMULATED_PSI.scope(PressureLevel::Elevated, async {
+        let status = coordinator.evaluate_and_preempt().await.unwrap();
+        assert!(status.preempted_leases.is_empty());
+    }).await;
+
+    // Batch runtimed lease IS preempted when DRM user session is active
+    let batch_lease = arbiter
+        .acquire_lease(
+            LeasePriority::Batch,
+            1024 * 1024 * 1024,
+            Some("plane-preempt-test".into()),
+            Some("/system.slice/runtimed.service".into()),
+            Some(7778),
+        )
+        .await
+        .unwrap();
+
+    SIMULATED_PSI.scope(PressureLevel::Elevated, async {
+        let status = coordinator.evaluate_and_preempt().await.unwrap();
+        assert_eq!(status.preempted_leases, vec![batch_lease.id]);
+    }).await;
+    let _ = interactive_lease;
+}
+
+

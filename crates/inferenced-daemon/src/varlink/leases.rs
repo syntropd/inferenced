@@ -59,7 +59,12 @@ pub async fn handle_acquire_lease(
         } else {
             priority
         };
-        (Some(peer.slice.clone()), if peer.pid > 0 { Some(peer.pid) } else { pid }, p)
+        let unit_name = if !peer.cgroup_path.is_empty() {
+            peer.cgroup_path.clone()
+        } else {
+            peer.slice.clone()
+        };
+        (Some(unit_name), if peer.pid > 0 { Some(peer.pid) } else { pid }, p)
     } else {
         (unit, pid, priority)
     };
