@@ -80,7 +80,7 @@ pub fn run_register(
 pub fn run_warm(socket_path: impl AsRef<Path>, id: &str) -> Result<()> {
     if let Ok(mut client) = VarlinkClient::connect(socket_path.as_ref()) {
         let _ = client.call(
-            "io.systemd.inferenced1.StreamInference",
+            "io.syntrop.Inference1.StreamInference",
             Some(json!({ "model": id, "prompt": "warmup-probe" })),
         );
     }

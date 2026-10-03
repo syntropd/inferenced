@@ -34,7 +34,7 @@ pub fn run_exec(
     // 1. Attempt live Varlink IPC streaming
     if let Ok(mut client) = VarlinkClient::connect(socket_path.as_ref()) {
         let stream_result = client.stream_call(
-            "io.systemd.inferenced1.StreamInference",
+            "io.syntrop.Inference1.StreamInference",
             Some(json!({
                 "model": model,
                 "prompt": prompt,

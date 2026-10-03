@@ -13,21 +13,14 @@ use tower::ServiceExt;
 
 fn make_test_state() -> Arc<AppState> {
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "plane-gateway-test".into(),
-        name: "Gateway GPU".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: 8 * 1024 * 1024 * 1024,
-        available_memory_bytes: 8 * 1024 * 1024 * 1024,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("plane-gateway-test")
+            .name("Gateway GPU")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(8 * 1024 * 1024 * 1024)
+            .build(),
+    );
     let arbiter = Arc::new(Arbiter::new(topo));
     let preempt = Arc::new(PreemptCoordinator::new(arbiter.clone()));
     Arc::new(AppState { arbiter, preempt, api_token: None })

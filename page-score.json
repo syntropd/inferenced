@@ -1,6 +1,6 @@
 {
  "repo": "inferenced",
- "rev": "32dce16",
+ "rev": "cac216d",
  "dirty": false,
  "pages": [
   {
@@ -47,7 +47,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/lib.rs",
-   "lines": 45,
+   "lines": 47,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -138,7 +138,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/reclaim/paging.rs",
-   "lines": 165,
+   "lines": 133,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 3
@@ -152,7 +152,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/schedule/enforce_workload.rs",
-   "lines": 122,
+   "lines": 108,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 2
@@ -187,14 +187,14 @@
   },
   {
    "path": "./crates/inferenced-core/src/tests/arbiter_tests.rs",
-   "lines": 233,
+   "lines": 218,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./crates/inferenced-core/src/tests/gang_tests.rs",
-   "lines": 136,
+   "lines": 129,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -208,14 +208,14 @@
   },
   {
    "path": "./crates/inferenced-core/src/tests/paging_tests.rs",
-   "lines": 130,
+   "lines": 102,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./crates/inferenced-core/src/tests/preempt_tests.rs",
-   "lines": 177,
+   "lines": 170,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -229,14 +229,14 @@
   },
   {
    "path": "./crates/inferenced-core/src/tests/topology_tests.rs",
-   "lines": 106,
+   "lines": 97,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./crates/inferenced-core/src/topology/affinity.rs",
-   "lines": 218,
+   "lines": 214,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 2
@@ -249,15 +249,43 @@
    "reach": 8
   },
   {
-   "path": "./crates/inferenced-core/src/topology/drm.rs",
-   "lines": 251,
+   "path": "./crates/inferenced-core/src/topology/drm/discover.rs",
+   "lines": 184,
+   "bin_bytes": null,
+   "heat_pct": null,
+   "reach": 1
+  },
+  {
+   "path": "./crates/inferenced-core/src/topology/drm/mod.rs",
+   "lines": 18,
+   "bin_bytes": null,
+   "heat_pct": null,
+   "reach": 0
+  },
+  {
+   "path": "./crates/inferenced-core/src/topology/drm/nvidia_proc.rs",
+   "lines": 159,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 2
   },
   {
+   "path": "./crates/inferenced-core/src/topology/drm/nvidia_smi.rs",
+   "lines": 130,
+   "bin_bytes": null,
+   "heat_pct": null,
+   "reach": 3
+  },
+  {
+   "path": "./crates/inferenced-core/src/topology/drm/sysfs.rs",
+   "lines": 112,
+   "bin_bytes": null,
+   "heat_pct": null,
+   "reach": 3
+  },
+  {
    "path": "./crates/inferenced-core/src/topology/mod.rs",
-   "lines": 59,
+   "lines": 62,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -285,10 +313,10 @@
   },
   {
    "path": "./crates/inferenced-core/src/topology/types.rs",
-   "lines": 126,
+   "lines": 205,
    "bin_bytes": null,
    "heat_pct": null,
-   "reach": 7
+   "reach": 8
   },
   {
    "path": "./crates/inferenced-daemon/src/activation.rs",
@@ -341,7 +369,7 @@
   },
   {
    "path": "./crates/inferenced-daemon/src/gateway/tests.rs",
-   "lines": 86,
+   "lines": 79,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -376,14 +404,14 @@
   },
   {
    "path": "./crates/inferenced-daemon/src/sentry/mod.rs",
-   "lines": 184,
+   "lines": 178,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./crates/inferenced-daemon/src/service.rs",
-   "lines": 90,
+   "lines": 83,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 3
@@ -397,7 +425,7 @@
   },
   {
    "path": "./crates/inferenced-daemon/src/varlink/inferenced1.rs",
-   "lines": 237,
+   "lines": 235,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 1
@@ -467,14 +495,14 @@
   },
   {
    "path": "./crates/inferenced-daemon/src/varlink/tests/composite_tests.rs",
-   "lines": 244,
+   "lines": 232,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./crates/inferenced-daemon/src/varlink/tests/mod.rs",
-   "lines": 237,
+   "lines": 231,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -565,7 +593,7 @@
   },
   {
    "path": "./qa/edge/faults/boundary_limits.rs",
-   "lines": 108,
+   "lines": 101,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -600,14 +628,14 @@
   },
   {
    "path": "./qa/edge/mod.rs",
-   "lines": 135,
+   "lines": 124,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./qa/edge/reclaim/dead_client_reclaim.rs",
-   "lines": 78,
+   "lines": 71,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -621,28 +649,28 @@
   },
   {
    "path": "./qa/edge/reclaim/rogue_disconnect_tests.rs",
-   "lines": 232,
+   "lines": 225,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./qa/edge/stress/challenger_preempt.rs",
-   "lines": 156,
+   "lines": 149,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./qa/edge/stress/challenger_r3_psi_uma_stress.rs",
-   "lines": 252,
+   "lines": 241,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./qa/edge/stress/challenger_r3_scm_rogue_stress.rs",
-   "lines": 254,
+   "lines": 253,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -656,28 +684,28 @@
   },
   {
    "path": "./qa/edge/stress/preemption_storm.rs",
-   "lines": 98,
+   "lines": 91,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./qa/edge/stress/psi_churn_stress_tests.rs",
-   "lines": 195,
+   "lines": 188,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./qa/edge/stress/sentry_stress.rs",
-   "lines": 140,
+   "lines": 134,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./qa/edge/stress/uma_thaw_storm_tests.rs",
-   "lines": 201,
+   "lines": 191,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -705,7 +733,7 @@
   },
   {
    "path": "./qa/fuzz/mod.rs",
-   "lines": 87,
+   "lines": 80,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -726,14 +754,14 @@
   },
   {
    "path": "./qa/integration/cross_feature_ext.rs",
-   "lines": 189,
+   "lines": 183,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./qa/integration/cross_feature_tests.rs",
-   "lines": 255,
+   "lines": 248,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -747,35 +775,35 @@
   },
   {
    "path": "./qa/integration/scenario_multitenant.rs",
-   "lines": 102,
+   "lines": 95,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./qa/integration/scenario_panic_triage.rs",
-   "lines": 125,
+   "lines": 118,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./qa/integration/scenario_psi_paging.rs",
-   "lines": 99,
+   "lines": 92,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./qa/integration/scenario_streaming.rs",
-   "lines": 132,
+   "lines": 127,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./qa/integration/scenario_varlink_mgmt.rs",
-   "lines": 143,
+   "lines": 139,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -817,14 +845,14 @@
   },
   {
    "path": "./qa/unit/daemon/sentry_tests.rs",
-   "lines": 196,
+   "lines": 173,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./qa/unit/discovery_tests.rs",
-   "lines": 101,
+   "lines": 83,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -845,28 +873,28 @@
   },
   {
    "path": "./qa/unit/madvise_tests.rs",
-   "lines": 167,
+   "lines": 164,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./qa/unit/mod.rs",
-   "lines": 245,
+   "lines": 206,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./qa/unit/preempt_tests.rs",
-   "lines": 224,
+   "lines": 219,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
   },
   {
    "path": "./qa/unit/varlink_tests.rs",
-   "lines": 176,
+   "lines": 166,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0

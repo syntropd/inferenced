@@ -77,9 +77,9 @@ fn test_fuzz_varlink_malformed_json_patterns() {
 
 #[test]
 fn test_fuzz_varlink_valid_framing() {
-    let valid = b"{\"method\":\"io.systemd.inferenced1.GetTopology\",\"parameters\":{}}\0";
+    let valid = b"{\"method\":\"io.syntrop.Inference1.GetTopology\",\"parameters\":{}}\0";
     let parsed = parse_varlink_frame(valid).expect("Valid Varlink frame must parse cleanly");
-    assert_eq!(parsed.method, "io.systemd.inferenced1.GetTopology");
+    assert_eq!(parsed.method, "io.syntrop.Inference1.GetTopology");
 }
 
 #[test]

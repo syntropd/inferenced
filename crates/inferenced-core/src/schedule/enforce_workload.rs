@@ -66,21 +66,14 @@ mod tests {
     #[test]
     fn test_reject_heavy_workloads_on_zero_discrete_gpu() {
         let mut topo = HardwareTopology::default();
-        topo.planes.push(ComputePlane {
-            id: "drm-renderD128".into(),
-            name: "Intel Iris Xe".into(),
-            kind: ComputePlaneKind::IntegratedUma,
-            device_path: None,
-            total_memory_bytes: 8 * 1024 * 1024 * 1024,
-            available_memory_bytes: 8 * 1024 * 1024 * 1024,
-            numa_node: None,
-            supported_formats: vec![],
-            is_triage_reserved: false,
-            is_quarantined: false,
-            hardware_features: vec![],
-            p2p_links: None,
-            kernel_used_memory: 0,
-        });
+        topo.planes.push(
+            ComputePlane::builder("drm-renderD128")
+                .name("Intel Iris Xe")
+                .kind(ComputePlaneKind::IntegratedUma)
+                .no_device_path()
+                .total_memory(8 * 1024 * 1024 * 1024)
+                .build(),
+        );
 
         let res_video = check_workload_compatibility(&topo, WorkloadKind::VideoTemporal);
         assert!(res_video.is_err());
@@ -100,21 +93,14 @@ mod tests {
     #[test]
     fn test_admit_heavy_workloads_with_discrete_gpu() {
         let mut topo = HardwareTopology::default();
-        topo.planes.push(ComputePlane {
-            id: "nvidia-gpu0".into(),
-            name: "RTX 4090".into(),
-            kind: ComputePlaneKind::DiscreteGpu,
-            device_path: None,
-            total_memory_bytes: 24 * 1024 * 1024 * 1024,
-            available_memory_bytes: 24 * 1024 * 1024 * 1024,
-            numa_node: None,
-            supported_formats: vec![],
-            is_triage_reserved: false,
-            is_quarantined: false,
-            hardware_features: vec![],
-            p2p_links: None,
-            kernel_used_memory: 0,
-        });
+        topo.planes.push(
+            ComputePlane::builder("nvidia-gpu0")
+                .name("RTX 4090")
+                .kind(ComputePlaneKind::DiscreteGpu)
+                .no_device_path()
+                .total_memory(24 * 1024 * 1024 * 1024)
+                .build(),
+        );
 
         assert!(check_workload_compatibility(&topo, WorkloadKind::VideoTemporal).is_ok());
         assert!(check_workload_compatibility(&topo, WorkloadKind::VisualHighRes).is_ok());

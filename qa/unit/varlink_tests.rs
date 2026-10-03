@@ -1,7 +1,7 @@
 use inferenced_core::{
     arbiter::Arbiter,
     lease::LeasePriority,
-    topology::{ComputePlane, ComputePlaneKind, HardwareTopology},
+    topology::{ComputePlane, HardwareTopology},
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -25,7 +25,7 @@ async fn test_varlink_get_info_introspection() {
         "url": "https://github.com/syntropd/inferenced",
         "interfaces": [
             "org.varlink.service",
-            "io.systemd.inferenced1"
+            "io.syntrop.Inference1"
         ]
     });
 
@@ -36,7 +36,7 @@ async fn test_varlink_get_info_introspection() {
 #[tokio::test]
 async fn test_varlink_wire_framing_nul_delimiter() {
     let req = json!({
-        "method": "io.systemd.inferenced1.GetTopology",
+        "method": "io.syntrop.Inference1.GetTopology",
         "parameters": {}
     });
     let mut bytes = serde_json::to_vec(&req).unwrap();
@@ -47,27 +47,22 @@ async fn test_varlink_wire_framing_nul_delimiter() {
     // Deserialize trimming NUL
     let clean = &bytes[..bytes.len() - 1];
     let parsed: VarlinkMsg = serde_json::from_slice(clean).unwrap();
-    assert_eq!(parsed.method, "io.systemd.inferenced1.GetTopology");
+    assert_eq!(parsed.method, "io.syntrop.Inference1.GetTopology");
 }
 
 #[tokio::test]
 async fn test_varlink_get_topology_payload() {
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "plane-gpu-0".into(),
-        name: "Discrete GPU".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: 8 * 1024 * 1024 * 1024,
-        available_memory_bytes: 8 * 1024 * 1024 * 1024,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("plane-gpu-0")
+            .name("Discrete GPU")
+            .no_device_path()
+            .total_memory(8 * 1024 * 1024 * 1024)
+            .numa_node(None)
+            .supported_formats(vec![])
+            .hardware_features(vec![])
+            .build(),
+    );
 
     let arbiter = Arbiter::new(topo);
     let state_topo = arbiter.get_topology().await;
@@ -96,21 +91,16 @@ async fn test_varlink_acquire_and_release_roundtrip() {
     let listener = UnixListener::bind(&sock).unwrap();
 
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "plane-varlink".into(),
-        name: "Varlink Plane".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: 10 * 1024 * 1024 * 1024,
-        available_memory_bytes: 10 * 1024 * 1024 * 1024,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("plane-varlink")
+            .name("Varlink Plane")
+            .no_device_path()
+            .total_memory(10 * 1024 * 1024 * 1024)
+            .numa_node(None)
+            .supported_formats(vec![])
+            .hardware_features(vec![])
+            .build(),
+    );
     let arbiter = Arc::new(Arbiter::new(topo));
     let server_arbiter = arbiter.clone();
 
@@ -125,7 +115,7 @@ async fn test_varlink_acquire_and_release_roundtrip() {
             let req: Value = serde_json::from_slice(&line[..line.len() - 1]).unwrap();
             let method = req["method"].as_str().unwrap();
 
-            if method == "io.systemd.inferenced1.AcquireLease" {
+            if method == "io.syntrop.Inference1.AcquireLease" {
                 let lease = server_arbiter
                     .acquire_lease(LeasePriority::Interactive, 1024 * 1024 * 1024, None, None, None)
                     .await
@@ -149,7 +139,7 @@ async fn test_varlink_acquire_and_release_roundtrip() {
     let mut buf_reader = BufReader::new(reader);
 
     let req = json!({
-        "method": "io.systemd.inferenced1.AcquireLease",
+        "method": "io.syntrop.Inference1.AcquireLease",
         "parameters": { "priority": "Interactive", "memory_bytes": 1024 * 1024 * 1024 }
     });
     let mut b = serde_json::to_vec(&req).unwrap();

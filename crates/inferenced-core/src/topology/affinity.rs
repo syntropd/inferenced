@@ -153,24 +153,20 @@ pub fn populate_p2p_links(planes: &mut [ComputePlane]) {
 mod tests {
     use super::*;
     use crate::topology::types::ComputePlaneKind;
-    use std::path::PathBuf;
 
     fn mock_plane(id: &str, numa: Option<u32>, path: Option<&str>) -> ComputePlane {
-        ComputePlane {
-            id: id.to_string(),
-            name: id.to_string(),
-            kind: ComputePlaneKind::DiscreteGpu,
-            device_path: path.map(PathBuf::from),
-            total_memory_bytes: 16 * 1024 * 1024 * 1024,
-            available_memory_bytes: 16 * 1024 * 1024 * 1024,
-            numa_node: numa,
-            supported_formats: vec!["FP16".into()],
-            is_triage_reserved: false,
-            is_quarantined: false,
-            hardware_features: vec![],
-            p2p_links: None,
-            kernel_used_memory: 0,
+        let mut b = ComputePlane::builder(id)
+            .name(id)
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .total_memory(16 * 1024 * 1024 * 1024)
+            .numa_node(numa)
+            .supported_formats(vec!["FP16".into()]);
+        if let Some(p) = path {
+            b = b.device_path(p);
+        } else {
+            b = b.no_device_path();
         }
+        b.build()
     }
 
     #[test]

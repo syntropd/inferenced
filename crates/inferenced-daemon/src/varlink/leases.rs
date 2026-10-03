@@ -89,7 +89,7 @@ pub async fn handle_acquire_lease(
             }),
         ),
         Err(e) => VarlinkReply::error(
-            "io.systemd.inferenced1.ResourceExhaustion",
+            "io.syntrop.Inference1.ResourceExhaustion",
             json!({"error": e.to_string()}),
         ),
     }
@@ -111,7 +111,7 @@ pub async fn handle_release_lease(
             VarlinkReply::ok(json!({}))
         }
         Err(e) => VarlinkReply::error(
-            "io.systemd.inferenced1.LeaseNotFound",
+            "io.syntrop.Inference1.LeaseNotFound",
             json!({"error": e.to_string()}),
         ),
     }
@@ -124,7 +124,7 @@ pub async fn handle_yield(params: Option<&Value>, arbiter: &Arc<Arbiter>) -> Var
     };
     match arbiter.yield_lease(lease_id).await {
         Ok(_) => VarlinkReply::ok(json!({})),
-        Err(e) => VarlinkReply::error("io.systemd.inferenced1.LeaseNotFound", json!({"error": e.to_string()})),
+        Err(e) => VarlinkReply::error("io.syntrop.Inference1.LeaseNotFound", json!({"error": e.to_string()})),
     }
 }
 
@@ -135,7 +135,7 @@ pub async fn handle_freeze(params: Option<&Value>, arbiter: &Arc<Arbiter>) -> Va
     };
     match arbiter.freeze_lease(lease_id).await {
         Ok(_) => VarlinkReply::ok(json!({})),
-        Err(e) => VarlinkReply::error("io.systemd.inferenced1.LeaseNotFound", json!({"error": e.to_string()})),
+        Err(e) => VarlinkReply::error("io.syntrop.Inference1.LeaseNotFound", json!({"error": e.to_string()})),
     }
 }
 
@@ -146,7 +146,7 @@ pub async fn handle_thaw(params: Option<&Value>, arbiter: &Arc<Arbiter>) -> Varl
     };
     match arbiter.thaw_lease(lease_id).await {
         Ok(_) => VarlinkReply::ok(json!({})),
-        Err(e) => VarlinkReply::error("io.systemd.inferenced1.ResourceExhaustion", json!({"error": e.to_string()})),
+        Err(e) => VarlinkReply::error("io.syntrop.Inference1.ResourceExhaustion", json!({"error": e.to_string()})),
     }
 }
 

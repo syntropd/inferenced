@@ -2,7 +2,7 @@ use inferenced_core::{
     arbiter::Arbiter,
     fd_lease::{create_sealed_memfd, recv_fd_from_unix, send_fd_over_unix},
     lease::LeasePriority,
-    topology::{ComputePlane, ComputePlaneKind, HardwareTopology},
+    topology::{ComputePlane, HardwareTopology},
 };
 use rustix::fs::{seek, SeekFrom};
 use rustix::io::read;
@@ -21,21 +21,16 @@ async fn test_scenario_high_volume_token_streaming() {
     let listener = UnixListener::bind(&socket_path).unwrap();
 
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "stream-gpu-0".into(),
-        name: "Streaming GPU".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: 16 * 1024 * 1024 * 1024,
-        available_memory_bytes: 16 * 1024 * 1024 * 1024,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("stream-gpu-0")
+            .name("Streaming GPU")
+            .no_device_path()
+            .total_memory(16 * 1024 * 1024 * 1024)
+            .numa_node(None)
+            .supported_formats(vec![])
+            .hardware_features(vec![])
+            .build(),
+    );
 
     let arbiter = Arc::new(Arbiter::new(topo));
     let server_arbiter = arbiter.clone();
@@ -49,7 +44,7 @@ async fn test_scenario_high_volume_token_streaming() {
 
         buf_reader.read_until(0, &mut line).await.unwrap();
         let req: serde_json::Value = serde_json::from_slice(&line[..line.len() - 1]).unwrap();
-        assert_eq!(req["method"], "io.systemd.inferenced1.StreamInference");
+        assert_eq!(req["method"], "io.syntrop.Inference1.StreamInference");
 
         let prompt = req["parameters"]["prompt"].as_str().unwrap();
 
@@ -101,7 +96,7 @@ async fn test_scenario_high_volume_token_streaming() {
     let mut buf_reader = BufReader::new(reader);
 
     let req = json!({
-        "method": "io.systemd.inferenced1.StreamInference",
+        "method": "io.syntrop.Inference1.StreamInference",
         "parameters": {
             "model": "qwen2.5-coder:7b",
             "prompt": "Explain Linux demand paging"

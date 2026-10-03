@@ -17,21 +17,14 @@ static SOCK_COUNTER: AtomicUsize = AtomicUsize::new(100);
 
 fn make_ext_topo() -> HardwareTopology {
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "plane-ext-gpu".into(),
-        name: "Extended Interaction dGPU".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: 8 * 1024 * 1024 * 1024,
-        available_memory_bytes: 8 * 1024 * 1024 * 1024,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("plane-ext-gpu")
+            .name("Extended Interaction dGPU")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(8 * 1024 * 1024 * 1024)
+            .build(),
+    );
     topo
 }
 
@@ -110,13 +103,14 @@ async fn test_interaction_cli_exec_stream_filter_with_sentry_triage_interruption
 #[tokio::test]
 async fn test_interaction_hardware_plane_rediscovery_with_active_leases() {
     let mut initial_topo = make_ext_topo();
-    initial_topo.planes.push(ComputePlane {
-        id: "plane-hotplug-npu".into(), name: "Hotplug NPU".into(), kind: ComputePlaneKind::NpuAccelerator,
-        device_path: None, total_memory_bytes: 2 * 1024 * 1024 * 1024, available_memory_bytes: 2 * 1024 * 1024 * 1024,
-        numa_node: None, supported_formats: vec![], is_triage_reserved: false, is_quarantined: false, hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    initial_topo.planes.push(
+        ComputePlane::builder("plane-hotplug-npu")
+            .name("Hotplug NPU")
+            .kind(ComputePlaneKind::NpuAccelerator)
+            .no_device_path()
+            .total_memory(2 * 1024 * 1024 * 1024)
+            .build(),
+    );
     let arbiter = Arbiter::new(initial_topo);
 
     let l1 = arbiter

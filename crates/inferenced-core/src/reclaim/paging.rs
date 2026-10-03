@@ -1,8 +1,6 @@
 use crate::error::{Error, Result};
 use crate::fd_lease::{create_sealed_memfd, recv_fd_from_unix, send_fd_over_unix};
-use crate::madvise::{
-    advise_dontneed, advise_hugepage, advise_random, advise_sequential, advise_willneed,
-};
+
 use rustix::fd::{AsFd, OwnedFd};
 use serde::{Deserialize, Serialize};
 use std::ffi::c_void;
@@ -98,36 +96,6 @@ impl MemfdPaging {
         Ok((model_id, fd))
     }
 
-    /// Advise kernel to reclaim pages using `Advice::LinuxDontNeed` (delegates to zswap / host reclaim).
-    pub fn reclaim_pages(addr: *mut c_void, len: usize) -> Result<()> {
-        advise_dontneed(addr, len)
-    }
-
-    /// Advise kernel to prefetch pages into RAM using `Advice::WillNeed`.
-    pub fn prefetch_pages(addr: *mut c_void, len: usize) -> Result<()> {
-        advise_willneed(addr, len)
-    }
-
-    /// Advise kernel to back pages with Transparent Huge Pages (THP).
-    pub fn advise_hugepages(addr: *mut c_void, len: usize) -> Result<()> {
-        advise_hugepage(addr, len)
-    }
-
-    /// Advise kernel of sequential access pattern.
-    pub fn advise_sequential(addr: *mut c_void, len: usize) -> Result<()> {
-        advise_sequential(addr, len)
-    }
-
-    /// Advise kernel of random access pattern.
-    pub fn advise_random(addr: *mut c_void, len: usize) -> Result<()> {
-        advise_random(addr, len)
-    }
-
-    /// Advise kernel to exclude pages from core dumps using `Advice::LinuxDontDump`.
-    /// Crucial for systemd-coredump: prevents multi-gigabyte models from thrashing storage on crash.
-    pub fn advise_exclude_coredump(addr: *mut c_void, len: usize) -> Result<()> {
-        crate::madvise::advise_dontdump(addr, len)
-    }
 
     /// Maps a received memfd into the process address space with PROT_READ and MAP_SHARED,
     /// and automatically invokes `MADV_DONTDUMP` to protect systemd-coredump from multi-GB dumps.

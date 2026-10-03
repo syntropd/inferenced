@@ -11,21 +11,14 @@ use std::time::{Duration, Instant};
 
 fn make_test_arbiter() -> Arc<Arbiter> {
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "plane-challenger-preempt".into(),
-        name: "Challenger Preempt Plane".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: 8 * 1024 * 1024 * 1024,
-        available_memory_bytes: 8 * 1024 * 1024 * 1024,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("plane-challenger-preempt")
+            .name("Challenger Preempt Plane")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(8 * 1024 * 1024 * 1024)
+            .build(),
+    );
     Arc::new(Arbiter::new(topo))
 }
 

@@ -16,21 +16,15 @@ mod transport;
 #[tokio::test]
 async fn test_edge_insufficient_memory_rejection() {
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "plane-small".into(),
-        name: "Small Accelerator".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: 1024 * 1024 * 1024,     // 1GB
-        available_memory_bytes: 512 * 1024 * 1024, // 512MB
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("plane-small")
+            .name("Small Accelerator")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(1024 * 1024 * 1024)
+            .available_memory(512 * 1024 * 1024)
+            .build(),
+    );
 
     let arbiter = Arbiter::new(topo);
     // Request 2GB on a 512MB plane
@@ -78,21 +72,16 @@ async fn test_edge_release_unknown_lease() {
 #[tokio::test]
 async fn test_edge_sentry_emergency_preemption_succeeds_even_when_exhausted() {
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "npu-triage".into(),
-        name: "Dedicated NPU".into(),
-        kind: ComputePlaneKind::NpuAccelerator,
-        device_path: None,
-        total_memory_bytes: 1024 * 1024 * 1024, // 1GB
-        available_memory_bytes: 0,              // 0 bytes free!
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: true,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("npu-triage")
+            .name("Dedicated NPU")
+            .kind(ComputePlaneKind::NpuAccelerator)
+            .no_device_path()
+            .total_memory(1024 * 1024 * 1024)
+            .available_memory(0)
+            .is_triage_reserved(true)
+            .build(),
+    );
 
     let arbiter = Arbiter::new(topo);
     // Emergency triage must succeed even when zero memory is reported

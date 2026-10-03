@@ -132,7 +132,7 @@ async fn test_adversarial_live_varlink_stream_piping() {
     let mut reader = BufReader::new(r);
 
     let req = json!({
-        "method": "io.systemd.inferenced1.StreamInference",
+        "method": "io.syntrop.Inference1.StreamInference",
         "parameters": { "model": "adv-model", "prompt": "stream prompt" },
         "more": true
     });

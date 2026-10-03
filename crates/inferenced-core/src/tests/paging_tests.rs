@@ -2,9 +2,7 @@ use crate::fd_lease::FdLease;
 use crate::paging::{MemfdPaging, ZswapMetrics};
 use rustix::fs::{fcntl_get_seals, seek, SeekFrom};
 use rustix::io::read;
-use rustix::mm::{mmap_anonymous, munmap, MapFlags, ProtFlags};
 use std::os::unix::net::UnixStream;
-use std::ptr::null_mut;
 use tempfile::tempdir;
 
 #[test]
@@ -46,33 +44,7 @@ fn test_send_and_recv_model_fd() {
     assert_eq!(&buf, model_data);
 }
 
-#[test]
-fn test_reclaim_and_prefetch_pages() {
-    let len = 4096 * 8; // 32KB
-    let addr = unsafe {
-        mmap_anonymous(
-            null_mut(),
-            len,
-            ProtFlags::READ | ProtFlags::WRITE,
-            MapFlags::PRIVATE,
-        )
-    }
-    .unwrap();
 
-    unsafe {
-        std::ptr::write_bytes(addr, 0xAA, len);
-    }
-
-    assert!(MemfdPaging::advise_sequential(addr, len).is_ok());
-    assert!(MemfdPaging::prefetch_pages(addr, len).is_ok());
-    let _ = MemfdPaging::advise_hugepages(addr, len);
-    assert!(MemfdPaging::advise_random(addr, len).is_ok());
-    assert!(MemfdPaging::reclaim_pages(addr, len).is_ok());
-
-    unsafe {
-        munmap(addr, len).unwrap();
-    }
-}
 
 #[test]
 fn test_zswap_metrics_parse_and_read() {

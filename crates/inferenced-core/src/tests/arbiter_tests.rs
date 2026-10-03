@@ -4,21 +4,16 @@ use crate::topology::{ComputePlane, ComputePlaneKind, HardwareTopology};
 
 fn create_test_topology(plane_id: &str, mem_bytes: u64) -> HardwareTopology {
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: plane_id.into(),
-        name: "Test GPU Plane".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: mem_bytes,
-        available_memory_bytes: mem_bytes,
-        numa_node: None,
-        supported_formats: vec!["FP16".into()],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec!["test".into()],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder(plane_id)
+            .name("Test GPU Plane")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(mem_bytes)
+            .supported_formats(vec!["FP16".into()])
+            .hardware_features(vec!["test".into()])
+            .build(),
+    );
     topo
 }
 
@@ -141,36 +136,26 @@ async fn test_release_nonexistent_lease_returns_error() {
 async fn test_composite_gang_atomic_allocation() {
     use crate::lease::{CompositeLeaseRequest, GangPolicy, PlaneRole, SliceRequirement};
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "gpu-gang-0".into(),
-        name: "GPU 0".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: 4 * 1024 * 1024 * 1024,
-        available_memory_bytes: 4 * 1024 * 1024 * 1024,
-        numa_node: Some(0),
-        supported_formats: vec!["FP16".into()],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
-    topo.planes.push(ComputePlane {
-        id: "gpu-gang-1".into(),
-        name: "GPU 1".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: 4 * 1024 * 1024 * 1024,
-        available_memory_bytes: 4 * 1024 * 1024 * 1024,
-        numa_node: Some(0),
-        supported_formats: vec!["FP16".into()],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("gpu-gang-0")
+            .name("GPU 0")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(4 * 1024 * 1024 * 1024)
+            .numa_node(Some(0))
+            .supported_formats(vec!["FP16".into()])
+            .build(),
+    );
+    topo.planes.push(
+        ComputePlane::builder("gpu-gang-1")
+            .name("GPU 1")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(4 * 1024 * 1024 * 1024)
+            .numa_node(Some(0))
+            .supported_formats(vec!["FP16".into()])
+            .build(),
+    );
 
     let arbiter = Arbiter::new(topo);
     let gang_req = CompositeLeaseRequest {

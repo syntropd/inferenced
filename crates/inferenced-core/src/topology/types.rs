@@ -53,6 +53,85 @@ pub struct ComputePlane {
     pub kernel_used_memory: u64,
 }
 
+impl ComputePlane {
+    pub fn builder(id: impl Into<String>) -> ComputePlaneBuilder {
+        ComputePlaneBuilder::new(id)
+    }
+}
+
+/// Fixture builder for [`ComputePlane`] providing sensible defaults.
+#[derive(Debug, Clone)]
+pub struct ComputePlaneBuilder {
+    id: String,
+    name: Option<String>,
+    kind: ComputePlaneKind,
+    device_path: Option<PathBuf>,
+    total_memory_bytes: u64,
+    available_memory_bytes: Option<u64>,
+    numa_node: Option<u32>,
+    supported_formats: Vec<String>,
+    is_triage_reserved: bool,
+    is_quarantined: bool,
+    hardware_features: Vec<String>,
+    p2p_links: Option<Vec<DeviceLink>>,
+    kernel_used_memory: u64,
+}
+
+impl ComputePlaneBuilder {
+    pub fn new(id: impl Into<String>) -> Self {
+        Self {
+            id: id.into(),
+            name: None,
+            kind: ComputePlaneKind::DiscreteGpu,
+            device_path: Some(PathBuf::from("/dev/dri/renderD128")),
+            total_memory_bytes: 24 * 1024 * 1024 * 1024,
+            available_memory_bytes: None,
+            numa_node: Some(0),
+            supported_formats: vec!["gguf".to_string(), "safetensors".to_string()],
+            is_triage_reserved: false,
+            is_quarantined: false,
+            hardware_features: vec!["cuda".to_string(), "flash-attn".to_string()],
+            p2p_links: None,
+            kernel_used_memory: 0,
+        }
+    }
+
+    pub fn name(mut self, name: impl Into<String>) -> Self { self.name = Some(name.into()); self }
+    pub fn kind(mut self, kind: ComputePlaneKind) -> Self { self.kind = kind; self }
+    pub fn device_path(mut self, path: impl Into<PathBuf>) -> Self { self.device_path = Some(path.into()); self }
+    pub fn no_device_path(mut self) -> Self { self.device_path = None; self }
+    pub fn total_memory(mut self, bytes: u64) -> Self { self.total_memory_bytes = bytes; self }
+    pub fn available_memory(mut self, bytes: u64) -> Self { self.available_memory_bytes = Some(bytes); self }
+    pub fn numa_node(mut self, node: Option<u32>) -> Self { self.numa_node = node; self }
+    pub fn supported_formats(mut self, formats: Vec<String>) -> Self { self.supported_formats = formats; self }
+    pub fn is_triage_reserved(mut self, reserved: bool) -> Self { self.is_triage_reserved = reserved; self }
+    pub fn is_quarantined(mut self, quarantined: bool) -> Self { self.is_quarantined = quarantined; self }
+    pub fn hardware_features(mut self, features: Vec<String>) -> Self { self.hardware_features = features; self }
+    pub fn p2p_links(mut self, links: Option<Vec<DeviceLink>>) -> Self { self.p2p_links = links; self }
+    pub fn kernel_used_memory(mut self, bytes: u64) -> Self { self.kernel_used_memory = bytes; self }
+
+    pub fn build(self) -> ComputePlane {
+        let name = self.name.unwrap_or_else(|| format!("Plane {}", self.id));
+        let total = self.total_memory_bytes;
+        let avail = self.available_memory_bytes.unwrap_or(total);
+        ComputePlane {
+            id: self.id,
+            name,
+            kind: self.kind,
+            device_path: self.device_path,
+            total_memory_bytes: total,
+            available_memory_bytes: avail,
+            numa_node: self.numa_node,
+            supported_formats: self.supported_formats,
+            is_triage_reserved: self.is_triage_reserved,
+            is_quarantined: self.is_quarantined,
+            hardware_features: self.hardware_features,
+            p2p_links: self.p2p_links,
+            kernel_used_memory: self.kernel_used_memory,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct HardwareTopology {
     pub planes: Vec<ComputePlane>,

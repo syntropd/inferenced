@@ -9,36 +9,26 @@ use tokio::sync::Barrier;
 
 fn create_uma_cpu_topology(capacity_bytes: u64) -> HardwareTopology {
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "plane-uma-0".into(),
-        name: "Integrated UMA Plane".into(),
-        kind: ComputePlaneKind::IntegratedUma,
-        device_path: None,
-        total_memory_bytes: capacity_bytes,
-        available_memory_bytes: capacity_bytes,
-        numa_node: Some(0),
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec!["unified_memory".into()],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
-    topo.planes.push(ComputePlane {
-        id: "plane-cpu-0".into(),
-        name: "CPU Matrix Extension".into(),
-        kind: ComputePlaneKind::CpuMatrixExtension,
-        device_path: None,
-        total_memory_bytes: capacity_bytes,
-        available_memory_bytes: capacity_bytes,
-        numa_node: Some(0),
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec!["amx".into()],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("plane-uma-0")
+            .name("Integrated UMA Plane")
+            .kind(ComputePlaneKind::IntegratedUma)
+            .no_device_path()
+            .total_memory(capacity_bytes)
+            .numa_node(Some(0))
+            .hardware_features(vec!["unified_memory".into()])
+            .build(),
+    );
+    topo.planes.push(
+        ComputePlane::builder("plane-cpu-0")
+            .name("CPU Matrix Extension")
+            .kind(ComputePlaneKind::CpuMatrixExtension)
+            .no_device_path()
+            .total_memory(capacity_bytes)
+            .numa_node(Some(0))
+            .hardware_features(vec!["amx".into()])
+            .build(),
+    );
     topo
 }
 

@@ -85,7 +85,7 @@ pub async fn handle_evict_model(params: Option<&Value>, arbiter: &Arc<Arbiter>) 
     match arbiter.remove_model(model_id).await {
         Some(_) => VarlinkReply::ok(json!({})),
         None => VarlinkReply::error(
-            "io.systemd.inferenced1.ModelNotFound",
+            "io.syntrop.Inference1.ModelNotFound",
             json!({"model": model_id}),
         ),
     }
@@ -121,7 +121,7 @@ pub async fn handle_pin_model(params: Option<&Value>, arbiter: &Arc<Arbiter>) ->
         VarlinkReply::ok(json!({}))
     } else {
         VarlinkReply::error(
-            "io.systemd.inferenced1.ModelNotFound",
+            "io.syntrop.Inference1.ModelNotFound",
             json!({"model": model_id}),
         )
     }

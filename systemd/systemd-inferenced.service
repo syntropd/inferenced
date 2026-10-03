@@ -44,6 +44,7 @@ DeviceAllow=/dev/dri/renderD* rw
 DeviceAllow=/dev/accel/* rw
 DeviceAllow=/dev/hailo* rw
 DeviceAllow=/dev/kfd rw
+DeviceAllow=char-nvidia* rw
 
 # cgroup v2 & systemd-oomd Protection
 ManagedOOMPreference=avoid

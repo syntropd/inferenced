@@ -18,38 +18,31 @@ async fn test_scenario_emergency_driver_panic_triage() {
 
     let mut topo = HardwareTopology::default();
     // 1. Unstable discrete GPU (simulated driver crash)
-    topo.planes.push(ComputePlane {
-        id: "gpu-panicked".into(),
-        name: "Discrete GPU (Kernel Panic)".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: 8 * 1024 * 1024 * 1024,
-        available_memory_bytes: 0, // fully locked up
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("gpu-panicked")
+            .name("Discrete GPU (Kernel Panic)")
+            .no_device_path()
+            .total_memory(8 * 1024 * 1024 * 1024)
+            .available_memory(0) // fully locked up
+            .numa_node(None)
+            .supported_formats(vec![])
+            .hardware_features(vec![])
+            .build(),
+    );
 
     // 2. Dedicated out-of-band NPU enclave reserved for systemd-sentry
-    topo.planes.push(ComputePlane {
-        id: "npu-sentry-enclave".into(),
-        name: "Dedicated Sentry NPU Triage Enclave".into(),
-        kind: ComputePlaneKind::NpuAccelerator,
-        device_path: None,
-        total_memory_bytes: 2 * 1024 * 1024 * 1024,
-        available_memory_bytes: 2 * 1024 * 1024 * 1024,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: true,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("npu-sentry-enclave")
+            .name("Dedicated Sentry NPU Triage Enclave")
+            .kind(ComputePlaneKind::NpuAccelerator)
+            .no_device_path()
+            .total_memory(2 * 1024 * 1024 * 1024)
+            .numa_node(None)
+            .supported_formats(vec![])
+            .is_triage_reserved(true)
+            .hardware_features(vec![])
+            .build(),
+    );
 
     let arbiter = Arc::new(Arbiter::new(topo));
 

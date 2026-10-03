@@ -8,21 +8,14 @@ use std::time::{Duration, Instant};
 
 fn make_boundary_arbiter(capacity_bytes: u64) -> Arbiter {
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "plane-edge-limit".into(),
-        name: "Boundary Limit Plane".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: capacity_bytes,
-        available_memory_bytes: capacity_bytes,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("plane-edge-limit")
+            .name("Boundary Limit Plane")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(capacity_bytes)
+            .build(),
+    );
     Arbiter::new(topo)
 }
 

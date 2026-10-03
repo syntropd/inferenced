@@ -81,21 +81,12 @@ fn test_cpu_discovery_mock() {
 #[test]
 fn test_triage_enclave_assignment_and_quota() {
     let mut planes = vec![
-        ComputePlane {
-            id: "cpu-host".into(),
-            name: "Host CPU".into(),
-            kind: ComputePlaneKind::CpuMatrixExtension,
-            device_path: None,
-            total_memory_bytes: 8 * 1024 * 1024 * 1024,
-            available_memory_bytes: 8 * 1024 * 1024 * 1024,
-            numa_node: None,
-            supported_formats: vec![],
-            is_triage_reserved: false,
-            is_quarantined: false,
-            hardware_features: vec![],
-            p2p_links: None,
-            kernel_used_memory: 0,
-        },
+        ComputePlane::builder("cpu-host")
+            .name("Host CPU")
+            .kind(ComputePlaneKind::CpuMatrixExtension)
+            .no_device_path()
+            .total_memory(8 * 1024 * 1024 * 1024)
+            .build(),
     ];
 
     let assigned = triage::assign_triage_enclave(&mut planes);

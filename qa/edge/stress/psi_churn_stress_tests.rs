@@ -9,21 +9,14 @@ use std::sync::Arc;
 
 fn create_test_topology(total_mem: u64) -> HardwareTopology {
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "plane-psi-stress".into(),
-        name: "PSI Stress Plane".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: total_mem,
-        available_memory_bytes: total_mem,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("plane-psi-stress")
+            .name("PSI Stress Plane")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(total_mem)
+            .build(),
+    );
     topo
 }
 

@@ -76,36 +76,18 @@ fn test_build_cpu_plane() {
 #[test]
 fn test_assign_triage_enclave_prefers_npu() {
     let mut planes = vec![
-        ComputePlane {
-            id: "gpu-0".into(),
-            name: "Discrete GPU".into(),
-            kind: ComputePlaneKind::DiscreteGpu,
-            device_path: None,
-            total_memory_bytes: 8 * 1024 * 1024 * 1024,
-            available_memory_bytes: 8 * 1024 * 1024 * 1024,
-            numa_node: None,
-            supported_formats: vec![],
-            is_triage_reserved: false,
-        is_quarantined: false,
-            hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-        },
-        ComputePlane {
-            id: "npu-accel0".into(),
-            name: "Intel NPU".into(),
-            kind: ComputePlaneKind::NpuAccelerator,
-            device_path: None,
-            total_memory_bytes: 2 * 1024 * 1024 * 1024,
-            available_memory_bytes: 2 * 1024 * 1024 * 1024,
-            numa_node: None,
-            supported_formats: vec![],
-            is_triage_reserved: false,
-        is_quarantined: false,
-            hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-        },
+        ComputePlane::builder("gpu-0")
+            .name("Discrete GPU")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(8 * 1024 * 1024 * 1024)
+            .build(),
+        ComputePlane::builder("npu-accel0")
+            .name("Intel NPU")
+            .kind(ComputePlaneKind::NpuAccelerator)
+            .no_device_path()
+            .total_memory(2 * 1024 * 1024 * 1024)
+            .build(),
     ];
 
     let reserved = triage::assign_triage_enclave(&mut planes);
@@ -116,21 +98,14 @@ fn test_assign_triage_enclave_prefers_npu() {
 
 #[test]
 fn test_assign_triage_enclave_falls_back_to_cpu() {
-    let mut planes = vec![ComputePlane {
-        id: "cpu-host".into(),
-        name: "Host CPU".into(),
-        kind: ComputePlaneKind::CpuMatrixExtension,
-        device_path: None,
-        total_memory_bytes: 16 * 1024 * 1024 * 1024,
-        available_memory_bytes: 16 * 1024 * 1024 * 1024,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    }];
+    let mut planes = vec![
+        ComputePlane::builder("cpu-host")
+            .name("Host CPU")
+            .kind(ComputePlaneKind::CpuMatrixExtension)
+            .no_device_path()
+            .total_memory(16 * 1024 * 1024 * 1024)
+            .build(),
+    ];
 
     let reserved = triage::assign_triage_enclave(&mut planes);
     assert_eq!(reserved, Some("cpu-host".into()));
@@ -144,21 +119,14 @@ fn test_assign_triage_enclave_falls_back_to_cpu() {
 
 #[test]
 fn test_assign_triage_enclave_proportional_on_constrained_host() {
-    let mut planes = vec![ComputePlane {
-        id: "cpu-edge".into(),
-        name: "Edge Host CPU".into(),
-        kind: ComputePlaneKind::CpuMatrixExtension,
-        device_path: None,
-        total_memory_bytes: 4 * 1024 * 1024 * 1024,
-        available_memory_bytes: 4 * 1024 * 1024 * 1024,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    }];
+    let mut planes = vec![
+        ComputePlane::builder("cpu-edge")
+            .name("Edge Host CPU")
+            .kind(ComputePlaneKind::CpuMatrixExtension)
+            .no_device_path()
+            .total_memory(4 * 1024 * 1024 * 1024)
+            .build(),
+    ];
 
     let reserved = triage::assign_triage_enclave(&mut planes);
     assert_eq!(reserved, Some("cpu-edge".into()));
@@ -175,21 +143,14 @@ fn test_assign_triage_enclave_proportional_on_constrained_host() {
 #[tokio::test]
 async fn test_arbiter_acquire_and_release_lease() {
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "plane-test".into(),
-        name: "Test Accelerator".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: 10 * 1024 * 1024 * 1024,
-        available_memory_bytes: 10 * 1024 * 1024 * 1024,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("plane-test")
+            .name("Test Accelerator")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(10 * 1024 * 1024 * 1024)
+            .build(),
+    );
 
     let arbiter = Arbiter::new(topo);
     let needed = 2 * 1024 * 1024 * 1024;

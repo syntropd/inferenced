@@ -12,21 +12,14 @@ use tokio::time::{sleep, Duration};
 async fn test_scenario_multitenant_arbitration_and_cooperative_yield() {
     // Scenario 5: Multi-tenant arbitration with cooperative yield & cgroup freezing fallback
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "plane-shared-apu".into(),
-        name: "Shared UMA APU Plane".into(),
-        kind: ComputePlaneKind::IntegratedUma,
-        device_path: None,
-        total_memory_bytes: 8 * 1024 * 1024 * 1024,
-        available_memory_bytes: 8 * 1024 * 1024 * 1024,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("plane-shared-apu")
+            .name("Shared UMA APU Plane")
+            .kind(ComputePlaneKind::IntegratedUma)
+            .no_device_path()
+            .total_memory(8 * 1024 * 1024 * 1024)
+            .build(),
+    );
 
     let arbiter = Arbiter::new(topo);
 

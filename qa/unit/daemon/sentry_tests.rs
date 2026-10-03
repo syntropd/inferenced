@@ -14,21 +14,17 @@ use tempfile::tempdir;
 #[tokio::test]
 async fn test_sentry_emergency_lease_bypasses_exhaustion() {
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "cpu-matrix-triage".into(),
-        name: "Dedicated Host CPU".into(),
-        kind: ComputePlaneKind::CpuMatrixExtension,
-        device_path: None,
-        total_memory_bytes: 2 * 1024 * 1024 * 1024,
-        available_memory_bytes: 0, // completely exhausted
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: true,
-        is_quarantined: false,
-        hardware_features: vec!["AMX-Tile".into()],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("cpu-matrix-triage")
+            .name("Dedicated Host CPU")
+            .kind(ComputePlaneKind::CpuMatrixExtension)
+            .no_device_path()
+            .total_memory(2 * 1024 * 1024 * 1024)
+            .available_memory(0)
+            .is_triage_reserved(true)
+            .hardware_features(vec!["AMX-Tile".into()])
+            .build(),
+    );
 
     let arbiter = Arbiter::new(topo);
     let lease = arbiter
@@ -78,21 +74,15 @@ async fn test_sentry_triage_socket_protocol_roundtrip() {
     let listener = UnixListener::bind(&socket_path).unwrap();
 
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "npu-triage-0".into(),
-        name: "Dedicated Sentry NPU".into(),
-        kind: ComputePlaneKind::NpuAccelerator,
-        device_path: None,
-        total_memory_bytes: 4 * 1024 * 1024 * 1024,
-        available_memory_bytes: 4 * 1024 * 1024 * 1024,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: true,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("npu-triage-0")
+            .name("Dedicated Sentry NPU")
+            .kind(ComputePlaneKind::NpuAccelerator)
+            .no_device_path()
+            .total_memory(4 * 1024 * 1024 * 1024)
+            .is_triage_reserved(true)
+            .build(),
+    );
 
     let arbiter = Arc::new(Arbiter::new(topo));
     let server_arbiter = arbiter.clone();
@@ -146,36 +136,23 @@ async fn test_sentry_triage_socket_protocol_roundtrip() {
 #[tokio::test]
 async fn test_sentry_non_reserved_planes_unaffected_by_sentry_reservation() {
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "gpu-workload".into(),
-        name: "General Workload dGPU".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: 8 * 1024 * 1024 * 1024,
-        available_memory_bytes: 8 * 1024 * 1024 * 1024,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
-    topo.planes.push(ComputePlane {
-        id: "npu-triage".into(),
-        name: "Sentry Triage Enclave".into(),
-        kind: ComputePlaneKind::NpuAccelerator,
-        device_path: None,
-        total_memory_bytes: 2 * 1024 * 1024 * 1024,
-        available_memory_bytes: 2 * 1024 * 1024 * 1024,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: true,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("gpu-workload")
+            .name("General Workload dGPU")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(8 * 1024 * 1024 * 1024)
+            .build(),
+    );
+    topo.planes.push(
+        ComputePlane::builder("npu-triage")
+            .name("Sentry Triage Enclave")
+            .kind(ComputePlaneKind::NpuAccelerator)
+            .no_device_path()
+            .total_memory(2 * 1024 * 1024 * 1024)
+            .is_triage_reserved(true)
+            .build(),
+    );
 
     let arbiter = Arbiter::new(topo);
     // General workload lease must NOT take the triage-reserved plane

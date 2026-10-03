@@ -7,21 +7,14 @@ use crate::lease::{
 use crate::topology::types::{ComputePlane, ComputePlaneKind, HardwareTopology};
 
 fn create_test_plane(id: &str, mem_gb: u64, numa: Option<u32>) -> ComputePlane {
-    ComputePlane {
-        id: id.to_string(),
-        name: id.to_string(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: mem_gb * 1024 * 1024 * 1024,
-        available_memory_bytes: mem_gb * 1024 * 1024 * 1024,
-        numa_node: numa,
-        supported_formats: vec!["FP16".into()],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    }
+    ComputePlane::builder(id)
+        .name(id)
+        .kind(ComputePlaneKind::DiscreteGpu)
+        .no_device_path()
+        .total_memory(mem_gb * 1024 * 1024 * 1024)
+        .numa_node(numa)
+        .supported_formats(vec!["FP16".into()])
+        .build()
 }
 
 #[tokio::test]

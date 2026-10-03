@@ -16,9 +16,7 @@ pub async fn handle_method(
     active_leases: &mut Vec<LeaseId>,
     peer_info: Option<&inferenced_core::PeerInfo>,
 ) -> Option<VarlinkReply> {
-    let sub = method
-        .strip_prefix("io.syntrop.Inference1.")
-        .or_else(|| method.strip_prefix("io.systemd.inferenced1."))?;
+    let sub = method.strip_prefix("io.syntrop.Inference1.")?;
 
     match sub {
         "GetStatus" | "GetInfo" => Some(handle_get_status(arbiter).await),
@@ -210,7 +208,7 @@ async fn handle_resize_lease(
 
     if !active_leases.contains(&lease_id) {
         return VarlinkReply::error(
-            "io.systemd.inferenced1.LeaseNotFound",
+            "io.syntrop.Inference1.LeaseNotFound",
             json!({"lease_id": lease_id.to_string()}),
         );
     }
@@ -222,10 +220,10 @@ async fn handle_resize_lease(
             "allocated_memory": lease.allocated_memory_bytes,
         })),
         Err(inferenced_core::error::Error::LeaseNotFound(_)) => {
-            VarlinkReply::error("io.systemd.inferenced1.LeaseNotFound", json!({"lease_id": lease_id.to_string()}))
+            VarlinkReply::error("io.syntrop.Inference1.LeaseNotFound", json!({"lease_id": lease_id.to_string()}))
         }
         Err(inferenced_core::error::Error::ResourceExhaustion { plane, requested_bytes, available_bytes }) => {
-            VarlinkReply::error("io.systemd.inferenced1.ResourceExhaustion", json!({
+            VarlinkReply::error("io.syntrop.Inference1.ResourceExhaustion", json!({
                 "plane": plane,
                 "requested": requested_bytes,
                 "available": available_bytes,

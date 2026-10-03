@@ -11,21 +11,14 @@ use std::ptr::null_mut;
 
 fn make_topo(cap: u64) -> HardwareTopology {
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "plane-cross-gpu".into(),
-        name: "Cross Feature dGPU".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: cap,
-        available_memory_bytes: cap,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("plane-cross-gpu")
+            .name("Cross Feature dGPU")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(cap)
+            .build(),
+    );
     topo
 }
 
@@ -196,12 +189,12 @@ async fn test_interaction_multitenant_arbitration_with_cooperative_yield_fallbac
 async fn test_interaction_uma_preempt_thaw_and_release_lifecycle() {
     let mut topo = HardwareTopology::default();
     let total_bytes = 8 * 1024 * 1024 * 1024;
-    let make_p = |id: &str, kind| ComputePlane {
-        id: id.into(), name: id.into(), kind, device_path: None, total_memory_bytes: total_bytes,
-        available_memory_bytes: total_bytes, numa_node: None, supported_formats: vec![],
-        is_triage_reserved: false, is_quarantined: false, hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
+    let make_p = |id: &str, kind| {
+        ComputePlane::builder(id)
+            .kind(kind)
+            .no_device_path()
+            .total_memory(total_bytes)
+            .build()
     };
     topo.planes.push(make_p("plane-uma-gpu", ComputePlaneKind::IntegratedUma));
     topo.planes.push(make_p("cpu-host", ComputePlaneKind::CpuMatrixExtension));

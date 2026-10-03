@@ -131,9 +131,6 @@ fn test_madvise_dontdump_excludes_from_coredump() {
     let res = inferenced_core::madvise::advise_dontdump(addr, size);
     assert!(res.is_ok(), "advise_dontdump should succeed on valid anonymous mmap");
 
-    let paging_res = inferenced_core::paging::MemfdPaging::advise_exclude_coredump(addr, size);
-    assert!(paging_res.is_ok(), "MemfdPaging::advise_exclude_coredump should succeed");
-
     unsafe {
         munmap(addr, size).unwrap();
     }

@@ -8,21 +8,15 @@ use tokio::net::UnixStream;
 
 fn make_test_topo() -> HardwareTopology {
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "plane-varlink-test".into(),
-        name: "Test Accelerator".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: 8 * 1024 * 1024 * 1024,
-        available_memory_bytes: 8 * 1024 * 1024 * 1024,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec!["vulkan".into()],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("plane-varlink-test")
+            .name("Test Accelerator")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(8 * 1024 * 1024 * 1024)
+            .hardware_features(vec!["vulkan".into()])
+            .build(),
+    );
     topo.total_system_ram_bytes = 32 * 1024 * 1024 * 1024;
     topo.available_system_ram_bytes = 16 * 1024 * 1024 * 1024;
     topo.cpu_cores_total = 8;
@@ -82,12 +76,12 @@ async fn test_varlink_server_get_status_and_list_planes() {
     assert!(desc.contains("method ListPlanes()"));
 
     // 3. GetStatus
-    let status_resp = varlink_call(&mut client, "io.systemd.inferenced1.GetStatus", json!({})).await;
+    let status_resp = varlink_call(&mut client, "io.syntrop.Inference1.GetStatus", json!({})).await;
     assert_eq!(status_resp["parameters"]["status"], "active");
     assert_eq!(status_resp["parameters"]["planes_count"], 1);
 
     // 4. ListPlanes
-    let planes_resp = varlink_call(&mut client, "io.systemd.inferenced1.ListPlanes", json!({})).await;
+    let planes_resp = varlink_call(&mut client, "io.syntrop.Inference1.ListPlanes", json!({})).await;
     let planes = planes_resp["parameters"]["planes"].as_array().unwrap();
     assert_eq!(planes.len(), 1);
     assert_eq!(planes[0]["id"], "plane-varlink-test");
@@ -96,7 +90,7 @@ async fn test_varlink_server_get_status_and_list_planes() {
     // 5. AcquireLease & ReleaseLease
     let acq_resp = varlink_call(
         &mut client,
-        "io.systemd.inferenced1.AcquireLease",
+        "io.syntrop.Inference1.AcquireLease",
         json!({
             "priority": "Interactive",
             "memory_bytes": 1024 * 1024 * 1024,
@@ -109,7 +103,7 @@ async fn test_varlink_server_get_status_and_list_planes() {
     // 6. FreezeLease and ThawLease
     let freeze_resp = varlink_call(
         &mut client,
-        "io.systemd.inferenced1.FreezeLease",
+        "io.syntrop.Inference1.FreezeLease",
         json!({ "lease_id": lease_id }),
     )
     .await;
@@ -117,7 +111,7 @@ async fn test_varlink_server_get_status_and_list_planes() {
 
     let thaw_resp = varlink_call(
         &mut client,
-        "io.systemd.inferenced1.ThawLease",
+        "io.syntrop.Inference1.ThawLease",
         json!({ "lease_id": lease_id }),
     )
     .await;
@@ -126,7 +120,7 @@ async fn test_varlink_server_get_status_and_list_planes() {
     // 7. RegisterModel, ListModels, PinModel, EvictModel
     let reg_resp = varlink_call(
         &mut client,
-        "io.systemd.inferenced1.RegisterModel",
+        "io.syntrop.Inference1.RegisterModel",
         json!({
             "id": "model-llama-test",
             "format": "GGUF",
@@ -137,14 +131,14 @@ async fn test_varlink_server_get_status_and_list_planes() {
     .await;
     assert!(reg_resp["parameters"].is_object());
 
-    let list_models_resp = varlink_call(&mut client, "io.systemd.inferenced1.ListModels", json!({})).await;
+    let list_models_resp = varlink_call(&mut client, "io.syntrop.Inference1.ListModels", json!({})).await;
     let models = list_models_resp["parameters"]["models"].as_array().unwrap();
     assert_eq!(models.len(), 1);
     assert_eq!(models[0]["id"], "model-llama-test");
 
     let pin_resp = varlink_call(
         &mut client,
-        "io.systemd.inferenced1.PinModel",
+        "io.syntrop.Inference1.PinModel",
         json!({
             "id": "model-llama-test",
             "plane": "plane-varlink-test",
@@ -155,7 +149,7 @@ async fn test_varlink_server_get_status_and_list_planes() {
 
     let evict_resp = varlink_call(
         &mut client,
-        "io.systemd.inferenced1.EvictModel",
+        "io.syntrop.Inference1.EvictModel",
         json!({ "id": "model-llama-test" }),
     )
     .await;
@@ -164,7 +158,7 @@ async fn test_varlink_server_get_status_and_list_planes() {
     // 8. ReleaseLease
     let rel_resp = varlink_call(
         &mut client,
-        "io.systemd.inferenced1.ReleaseLease",
+        "io.syntrop.Inference1.ReleaseLease",
         json!({ "lease_id": lease_id }),
     )
     .await;

@@ -54,36 +54,18 @@ fn test_discovery_build_cpu_plane() {
 #[test]
 fn test_discovery_triage_enclave_selection_hierarchy() {
     let mut planes = vec![
-        ComputePlane {
-            id: "gpu-0".into(),
-            name: "Discrete GPU".into(),
-            kind: ComputePlaneKind::DiscreteGpu,
-            device_path: None,
-            total_memory_bytes: 16 * 1024 * 1024 * 1024,
-            available_memory_bytes: 16 * 1024 * 1024 * 1024,
-            numa_node: None,
-            supported_formats: vec![],
-            is_triage_reserved: false,
-        is_quarantined: false,
-            hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-        },
-        ComputePlane {
-            id: "npu-0".into(),
-            name: "Neural Processing Unit".into(),
-            kind: ComputePlaneKind::NpuAccelerator,
-            device_path: None,
-            total_memory_bytes: 4 * 1024 * 1024 * 1024,
-            available_memory_bytes: 4 * 1024 * 1024 * 1024,
-            numa_node: None,
-            supported_formats: vec![],
-            is_triage_reserved: false,
-        is_quarantined: false,
-            hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-        },
+        ComputePlane::builder("gpu-0")
+            .name("Discrete GPU")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(16 * 1024 * 1024 * 1024)
+            .build(),
+        ComputePlane::builder("npu-0")
+            .name("Neural Processing Unit")
+            .kind(ComputePlaneKind::NpuAccelerator)
+            .no_device_path()
+            .total_memory(4 * 1024 * 1024 * 1024)
+            .build(),
     ];
 
     let reserved = triage::assign_triage_enclave(&mut planes);

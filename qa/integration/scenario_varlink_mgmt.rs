@@ -18,21 +18,17 @@ async fn test_scenario_varlink_service_introspection_and_management() {
     let listener = UnixListener::bind(&socket_path).unwrap();
 
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "mgmt-plane-0".into(),
-        name: "Enterprise NPU Accelerator".into(),
-        kind: ComputePlaneKind::NpuAccelerator,
-        device_path: None,
-        total_memory_bytes: 8 * 1024 * 1024 * 1024,
-        available_memory_bytes: 8 * 1024 * 1024 * 1024,
-        numa_node: None,
-        supported_formats: vec!["GGUF".into()],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec!["Hailo-8".into()],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("mgmt-plane-0")
+            .name("Enterprise NPU Accelerator")
+            .kind(ComputePlaneKind::NpuAccelerator)
+            .no_device_path()
+            .total_memory(8 * 1024 * 1024 * 1024)
+            .numa_node(None)
+            .supported_formats(vec!["GGUF".into()])
+            .hardware_features(vec!["Hailo-8".into()])
+            .build(),
+    );
 
     let arbiter = Arc::new(Arbiter::new(topo));
     let server_arbiter = arbiter.clone();
@@ -55,10 +51,10 @@ async fn test_scenario_varlink_service_introspection_and_management() {
                         "product": "systemd-inferenced",
                         "version": "0.1.0",
                         "url": "https://github.com/syntropd/inferenced",
-                        "interfaces": ["org.varlink.service", "io.systemd.inferenced1"]
+                        "interfaces": ["org.varlink.service", "io.syntrop.Inference1"]
                     }
                 }),
-                "io.systemd.inferenced1.GetTopology" => {
+                "io.syntrop.Inference1.GetTopology" => {
                     let t = server_arbiter.get_topology().await;
                     json!({
                         "parameters": {
@@ -71,7 +67,7 @@ async fn test_scenario_varlink_service_introspection_and_management() {
                         }
                     })
                 },
-                "io.systemd.inferenced1.AcquireLease" => {
+                "io.syntrop.Inference1.AcquireLease" => {
                     let mem = req["parameters"]["memory_bytes"].as_u64().unwrap();
                     let l = server_arbiter
                         .acquire_lease(LeasePriority::Interactive, mem, None, None, None)
@@ -84,7 +80,7 @@ async fn test_scenario_varlink_service_introspection_and_management() {
                         }
                     })
                 },
-                "io.systemd.inferenced1.ReleaseLease" => {
+                "io.syntrop.Inference1.ReleaseLease" => {
                     let id_str = req["parameters"]["lease_id"].as_str().unwrap();
                     let uid = uuid::Uuid::parse_str(id_str).unwrap();
                     server_arbiter.release_lease(inferenced_core::lease::LeaseId(uid)).await.unwrap();
@@ -118,25 +114,25 @@ async fn test_scenario_varlink_service_introspection_and_management() {
     buf_reader.read_until(0, &mut resp_buf).await.unwrap();
     let info: Value = serde_json::from_slice(&resp_buf[..resp_buf.len() - 1]).unwrap();
     assert_eq!(info["parameters"]["vendor"], "systemd-inferenced");
-    assert!(info["parameters"]["interfaces"].as_array().unwrap().contains(&json!("io.systemd.inferenced1")));
+    assert!(info["parameters"]["interfaces"].as_array().unwrap().contains(&json!("io.syntrop.Inference1")));
 
     // 2. Discover compute planes via Varlink
     resp_buf.clear();
-    writer.write_all(&call("io.systemd.inferenced1.GetTopology", json!({}))).await.unwrap();
+    writer.write_all(&call("io.syntrop.Inference1.GetTopology", json!({}))).await.unwrap();
     buf_reader.read_until(0, &mut resp_buf).await.unwrap();
     let topo_resp: Value = serde_json::from_slice(&resp_buf[..resp_buf.len() - 1]).unwrap();
     assert_eq!(topo_resp["parameters"]["planes"][0]["id"], "mgmt-plane-0");
 
     // 3. Acquire lease via Varlink
     resp_buf.clear();
-    writer.write_all(&call("io.systemd.inferenced1.AcquireLease", json!({ "memory_bytes": 1024 * 1024 * 1024 }))).await.unwrap();
+    writer.write_all(&call("io.syntrop.Inference1.AcquireLease", json!({ "memory_bytes": 1024 * 1024 * 1024 }))).await.unwrap();
     buf_reader.read_until(0, &mut resp_buf).await.unwrap();
     let lease_resp: Value = serde_json::from_slice(&resp_buf[..resp_buf.len() - 1]).unwrap();
     let lease_id = lease_resp["parameters"]["lease_id"].as_str().unwrap().to_string();
 
     // 4. Release lease via Varlink
     resp_buf.clear();
-    writer.write_all(&call("io.systemd.inferenced1.ReleaseLease", json!({ "lease_id": lease_id }))).await.unwrap();
+    writer.write_all(&call("io.syntrop.Inference1.ReleaseLease", json!({ "lease_id": lease_id }))).await.unwrap();
     buf_reader.read_until(0, &mut resp_buf).await.unwrap();
     let release_resp: Value = serde_json::from_slice(&resp_buf[..resp_buf.len() - 1]).unwrap();
     assert!(release_resp.get("error").is_none());

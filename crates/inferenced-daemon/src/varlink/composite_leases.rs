@@ -120,7 +120,7 @@ pub async fn handle_acquire_composite_lease(
             }),
         ),
         Err(e) => VarlinkReply::error(
-            "io.systemd.inferenced1.ResourceExhaustion",
+            "io.syntrop.Inference1.ResourceExhaustion",
             json!({"error": e.to_string()}),
         ),
     }
@@ -142,7 +142,7 @@ pub async fn handle_release_composite_lease(
             VarlinkReply::ok(json!({}))
         }
         Err(e) => VarlinkReply::error(
-            "io.systemd.inferenced1.LeaseNotFound",
+            "io.syntrop.Inference1.LeaseNotFound",
             json!({"error": e.to_string()}),
         ),
     }

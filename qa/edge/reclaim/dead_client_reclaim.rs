@@ -8,22 +8,15 @@ use inferenced_core::{
 #[tokio::test]
 async fn test_dead_client_lease_reclaim_lifecycle() {
     let mut topo = HardwareTopology::default();
-    let total_mem = 8 * 1024 * 1024 * 1024; // 8GB
-    topo.planes.push(ComputePlane {
-        id: "gpu-reclaim".into(),
-        name: "Discrete GPU Reclaim Plane".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: total_mem,
-        available_memory_bytes: total_mem,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    let total_mem = 8 * 1024 * 1024 * 1024;
+    topo.planes.push(
+        ComputePlane::builder("gpu-reclaim")
+            .name("Discrete GPU Reclaim Plane")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(total_mem)
+            .build(),
+    );
 
     let arbiter = Arbiter::new(topo);
 

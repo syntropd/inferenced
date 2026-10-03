@@ -2,27 +2,22 @@ use inferenced_core::{
     arbiter::Arbiter,
     freezer::{send_cooperative_yield_signal, signal_process},
     lease::{LeasePriority, LeaseState},
-    topology::{ComputePlane, ComputePlaneKind, HardwareTopology},
+    topology::{ComputePlane, HardwareTopology},
 };
 use rustix::process::Signal;
 
 fn make_test_arbiter(capacity_bytes: u64) -> Arbiter {
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "plane-test-gpu".into(),
-        name: "Test Discrete GPU".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: capacity_bytes,
-        available_memory_bytes: capacity_bytes,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("plane-test-gpu")
+            .name("Test Discrete GPU")
+            .no_device_path()
+            .total_memory(capacity_bytes)
+            .numa_node(None)
+            .supported_formats(vec![])
+            .hardware_features(vec![])
+            .build(),
+    );
     Arbiter::new(topo)
 }
 

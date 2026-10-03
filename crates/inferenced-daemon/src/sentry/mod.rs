@@ -129,21 +129,15 @@ mod tests {
 
     fn make_test_topology() -> HardwareTopology {
         let mut topo = HardwareTopology::default();
-        topo.planes.push(ComputePlane {
-            id: "npu-sentry-0".into(),
-            name: "Protected Sentry NPU Enclave".into(),
-            kind: ComputePlaneKind::NpuAccelerator,
-            device_path: None,
-            total_memory_bytes: 4 * 1024 * 1024 * 1024,
-            available_memory_bytes: 4 * 1024 * 1024 * 1024,
-            numa_node: None,
-            supported_formats: vec![],
-            is_triage_reserved: true,
-            is_quarantined: false,
-            hardware_features: vec![],
-            p2p_links: None,
-            kernel_used_memory: 0,
-        });
+        topo.planes.push(
+            ComputePlane::builder("npu-sentry-0")
+                .name("Protected Sentry NPU Enclave")
+                .kind(ComputePlaneKind::NpuAccelerator)
+                .no_device_path()
+                .total_memory(4 * 1024 * 1024 * 1024)
+                .is_triage_reserved(true)
+                .build(),
+        );
         topo
     }
 

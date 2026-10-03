@@ -11,36 +11,24 @@ use tokio::net::UnixStream;
 
 fn make_two_gpu_topo() -> HardwareTopology {
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "plane-gpu-0".into(),
-        name: "Test GPU 0".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: 8 * 1024 * 1024 * 1024,
-        available_memory_bytes: 8 * 1024 * 1024 * 1024,
-        numa_node: Some(0),
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
-    topo.planes.push(ComputePlane {
-        id: "plane-gpu-1".into(),
-        name: "Test GPU 1".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: 8 * 1024 * 1024 * 1024,
-        available_memory_bytes: 8 * 1024 * 1024 * 1024,
-        numa_node: Some(0),
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("plane-gpu-0")
+            .name("Test GPU 0")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(8 * 1024 * 1024 * 1024)
+            .numa_node(Some(0))
+            .build(),
+    );
+    topo.planes.push(
+        ComputePlane::builder("plane-gpu-1")
+            .name("Test GPU 1")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(8 * 1024 * 1024 * 1024)
+            .numa_node(Some(0))
+            .build(),
+    );
     topo
 }
 
@@ -159,7 +147,7 @@ async fn test_varlink_drm_watermark_and_resize_lease() {
             "memory_bytes": 100u64 * 1024 * 1024 * 1024,
         }),
     ).await;
-    assert_eq!(oom_resp["error"], "io.systemd.inferenced1.ResourceExhaustion");
+    assert_eq!(oom_resp["error"], "io.syntrop.Inference1.ResourceExhaustion");
 
     // 3c. ResizeLease with unknown lease_id -> LeaseNotFound
     let notfound_resp = varlink_call(
@@ -170,7 +158,7 @@ async fn test_varlink_drm_watermark_and_resize_lease() {
             "memory_bytes": 1024 * 1024 * 1024,
         }),
     ).await;
-    assert_eq!(notfound_resp["error"], "io.systemd.inferenced1.LeaseNotFound");
+    assert_eq!(notfound_resp["error"], "io.syntrop.Inference1.LeaseNotFound");
 
     // 3d. ResizeLease shrink to 512MB
     let shrink_resp = varlink_call(
@@ -193,7 +181,7 @@ async fn test_varlink_drm_watermark_and_resize_lease() {
             "memory_bytes": 1024u64 * 1024 * 1024,
         }),
     ).await;
-    assert_eq!(unowned_resp["error"], "io.systemd.inferenced1.LeaseNotFound");
+    assert_eq!(unowned_resp["error"], "io.syntrop.Inference1.LeaseNotFound");
 
     // 4. ReleaseLease
     let rel_resp = varlink_call(

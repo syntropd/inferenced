@@ -13,21 +13,14 @@ use std::ptr::null_mut;
 async fn test_scenario_memory_starvation_and_psi_paging() {
     // Scenario 3: Memory pressure rises to critical; daemon triggers dynamic demand paging
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "plane-starved-gpu".into(),
-        name: "Memory Starved GPU".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: 8 * 1024 * 1024 * 1024,
-        available_memory_bytes: 8 * 1024 * 1024 * 1024,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("plane-starved-gpu")
+            .name("Memory Starved GPU")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(8 * 1024 * 1024 * 1024)
+            .build(),
+    );
 
     let _arbiter = Arbiter::new(topo);
 

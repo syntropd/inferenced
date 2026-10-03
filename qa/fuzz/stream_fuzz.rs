@@ -40,7 +40,7 @@ fn test_fuzz_stream_huge_prompt_serialization() {
     }
 
     let req = json!({
-        "method": "io.systemd.inferenced1.StreamInference",
+        "method": "io.syntrop.Inference1.StreamInference",
         "parameters": {
             "model": "qwen2.5-coder:7b",
             "prompt": huge_prompt
@@ -51,7 +51,7 @@ fn test_fuzz_stream_huge_prompt_serialization() {
     assert!(serialized.len() >= 400_000);
 
     let parsed: serde_json::Value = serde_json::from_slice(&serialized).unwrap();
-    assert_eq!(parsed["method"], "io.systemd.inferenced1.StreamInference");
+    assert_eq!(parsed["method"], "io.syntrop.Inference1.StreamInference");
 }
 
 #[test]

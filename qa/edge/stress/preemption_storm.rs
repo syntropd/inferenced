@@ -8,21 +8,14 @@ use inferenced_core::{
 async fn test_preemption_storm_under_saturation() {
     let mut topo = HardwareTopology::default();
     let total_mem = 4 * 1024 * 1024 * 1024; // 4GB
-    topo.planes.push(ComputePlane {
-        id: "gpu-storm".into(),
-        name: "Discrete GPU Storm Plane".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: total_mem,
-        available_memory_bytes: total_mem,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("gpu-storm")
+            .name("Discrete GPU Storm Plane")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(total_mem)
+            .build(),
+    );
 
     let arbiter = Arbiter::new(topo);
 

@@ -11,21 +11,14 @@ use tokio::net::{UnixListener, UnixStream};
 
 fn create_rogue_topology(total_mem: u64) -> HardwareTopology {
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "plane-rogue-gpu".into(),
-        name: "Rogue Test GPU Plane".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: total_mem,
-        available_memory_bytes: total_mem,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("plane-rogue-gpu")
+            .name("Rogue Test GPU Plane")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(total_mem)
+            .build(),
+    );
     topo
 }
 
@@ -56,7 +49,7 @@ async fn run_rogue_varlink_server(listener: UnixListener, arbiter: Arc<Arbiter>)
                         let params = req.get("parameters");
 
                         match method {
-                            "io.systemd.inferenced1.AcquireLease" => {
+                            "io.syntrop.Inference1.AcquireLease" => {
                                 let prio_str = params
                                     .and_then(|p| p.get("priority"))
                                     .and_then(|v| v.as_str())
@@ -87,7 +80,7 @@ async fn run_rogue_varlink_server(listener: UnixListener, arbiter: Arc<Arbiter>)
                                     Err(_) => break,
                                 }
                             }
-                            "io.systemd.inferenced1.StreamInference" => {
+                            "io.syntrop.Inference1.StreamInference" => {
                                 for i in 0..5 {
                                     let chunk = json!({
                                         "parameters": { "chunk": format!("token_{} ", i) },
@@ -131,7 +124,7 @@ async fn test_rogue_client_disconnect_reclaims_all_leases_and_memory() {
     for i in 0..10 {
         let mut stream = UnixStream::connect(&sock).await.unwrap();
         let req = json!({
-            "method": "io.systemd.inferenced1.AcquireLease",
+            "method": "io.syntrop.Inference1.AcquireLease",
             "parameters": { "priority": "Interactive", "memory_bytes": 1024 * 1024 * 1024 }
         });
         let mut b = serde_json::to_vec(&req).unwrap();
@@ -145,7 +138,7 @@ async fn test_rogue_client_disconnect_reclaims_all_leases_and_memory() {
         assert!(resp["parameters"]["lease_id"].is_string());
 
         let stream_req = json!({
-            "method": "io.systemd.inferenced1.StreamInference",
+            "method": "io.syntrop.Inference1.StreamInference",
             "parameters": { "prompt": format!("rogue-prompt-{}", i) }
         });
         let mut sb = serde_json::to_vec(&stream_req).unwrap();
@@ -167,7 +160,7 @@ async fn test_rogue_client_disconnect_reclaims_all_leases_and_memory() {
     for _ in 0..10 {
         let mut stream = UnixStream::connect(&sock).await.unwrap();
         let req = json!({
-            "method": "io.systemd.inferenced1.AcquireLease",
+            "method": "io.syntrop.Inference1.AcquireLease",
             "parameters": { "priority": "Batch", "memory_bytes": 1024 * 1024 * 1024 }
         });
         let mut b = serde_json::to_vec(&req).unwrap();

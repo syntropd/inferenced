@@ -34,21 +34,14 @@ fn test_fuzz_parse_kb_with_random_garbage() {
 #[tokio::test]
 async fn test_fuzz_concurrent_randomized_leases() {
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "plane-fuzz".into(),
-        name: "Fuzzing Stress Plane".into(),
-        kind: ComputePlaneKind::DiscreteGpu,
-        device_path: None,
-        total_memory_bytes: 100 * 1024 * 1024 * 1024,     // 100GB
-        available_memory_bytes: 100 * 1024 * 1024 * 1024,
-        numa_node: None,
-        supported_formats: vec![],
-        is_triage_reserved: false,
-        is_quarantined: false,
-        hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("plane-fuzz")
+            .name("Fuzzing Stress Plane")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(100 * 1024 * 1024 * 1024)
+            .build(),
+    );
 
     let arbiter = Arc::new(Arbiter::new(topo));
     let mut handles = Vec::new();

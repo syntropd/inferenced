@@ -108,15 +108,14 @@ fn test_adversarial_scm_rights_50_client_fanout_and_fd_leaks() {
 
 fn create_rogue_plane(total_mem: u64) -> HardwareTopology {
     let mut topo = HardwareTopology::default();
-    topo.planes.push(ComputePlane {
-        id: "plane-rogue-adv".into(), name: "Adversarial Rogue Plane".into(),
-        kind: ComputePlaneKind::DiscreteGpu, device_path: None,
-        total_memory_bytes: total_mem, available_memory_bytes: total_mem,
-        numa_node: None, supported_formats: vec![],
-        is_triage_reserved: false, is_quarantined: false, hardware_features: vec![],
-        p2p_links: None,
-        kernel_used_memory: 0,
-    });
+    topo.planes.push(
+        ComputePlane::builder("plane-rogue-adv")
+            .name("Adversarial Rogue Plane")
+            .kind(ComputePlaneKind::DiscreteGpu)
+            .no_device_path()
+            .total_memory(total_mem)
+            .build(),
+    );
     topo
 }
 
@@ -142,7 +141,7 @@ async fn run_mock_varlink_server(listener: UnixListener, arbiter: Arc<Arbiter>) 
                         let params = req.get("parameters");
 
                         match method {
-                            "io.systemd.inferenced1.AcquireLease" => {
+                            "io.syntrop.Inference1.AcquireLease" => {
                                 let prio = match params.and_then(|p| p.get("priority")).and_then(|v| v.as_str()).unwrap_or("Interactive") {
                                     "Batch" => LeasePriority::Batch,
                                     "EmergencyTriage" => LeasePriority::EmergencyTriage,
@@ -160,7 +159,7 @@ async fn run_mock_varlink_server(listener: UnixListener, arbiter: Arc<Arbiter>) 
                                     Err(_) => break,
                                 }
                             }
-                            "io.systemd.inferenced1.StreamInference" => {
+                            "io.syntrop.Inference1.StreamInference" => {
                                 for i in 0..5 {
                                     let chunk = json!({ "parameters": { "chunk": format!("tok_{}", i) }, "continues": i < 4 });
                                     let mut b = serde_json::to_vec(&chunk).unwrap();
@@ -194,7 +193,7 @@ async fn test_adversarial_rogue_client_disconnect_storm_varlink() {
     // Wave 1: 10 clients acquire lease, start inference, and drop mid-stream
     for i in 0..10 {
         let mut stream = UnixStream::connect(&sock).await.unwrap();
-        let req = json!({ "method": "io.systemd.inferenced1.AcquireLease", "parameters": { "priority": "Interactive", "memory_bytes": 1024 * 1024 * 1024 } });
+        let req = json!({ "method": "io.syntrop.Inference1.AcquireLease", "parameters": { "priority": "Interactive", "memory_bytes": 1024 * 1024 * 1024 } });
         let mut b = serde_json::to_vec(&req).unwrap();
         b.push(0);
         stream.write_all(&b).await.unwrap();
@@ -202,7 +201,7 @@ async fn test_adversarial_rogue_client_disconnect_storm_varlink() {
         let mut resp_buf = Vec::new();
         reader.read_until(0, &mut resp_buf).await.unwrap();
 
-        let sreq = json!({ "method": "io.systemd.inferenced1.StreamInference", "parameters": { "prompt": format!("p_{}", i) } });
+        let sreq = json!({ "method": "io.syntrop.Inference1.StreamInference", "parameters": { "prompt": format!("p_{}", i) } });
         let mut sb = serde_json::to_vec(&sreq).unwrap();
         sb.push(0);
         let _ = stream.write_all(&sb).await;
@@ -220,7 +219,7 @@ async fn test_adversarial_rogue_client_disconnect_storm_varlink() {
     let mut batch_streams = Vec::new();
     for _ in 0..10 {
         let mut stream = UnixStream::connect(&sock).await.unwrap();
-        let req = json!({ "method": "io.systemd.inferenced1.AcquireLease", "parameters": { "priority": "Batch", "memory_bytes": 1024 * 1024 * 1024 } });
+        let req = json!({ "method": "io.syntrop.Inference1.AcquireLease", "parameters": { "priority": "Batch", "memory_bytes": 1024 * 1024 * 1024 } });
         let mut b = serde_json::to_vec(&req).unwrap();
         b.push(0);
         stream.write_all(&b).await.unwrap();
