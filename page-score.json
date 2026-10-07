@@ -1,6 +1,6 @@
 {
  "repo": "inferenced",
- "rev": "effc378",
+ "rev": "49e325f",
  "dirty": false,
  "pages": [
   {
@@ -148,7 +148,7 @@
    "lines": 255,
    "bin_bytes": null,
    "heat_pct": null,
-   "reach": 42
+   "reach": 43
   },
   {
    "path": "./crates/inferenced-core/src/schedule/enforce_workload.rs",
@@ -159,7 +159,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/schedule/gang_scheduler.rs",
-   "lines": 231,
+   "lines": 236,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 1
@@ -229,7 +229,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/tests/topology_tests.rs",
-   "lines": 97,
+   "lines": 159,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -243,14 +243,14 @@
   },
   {
    "path": "./crates/inferenced-core/src/topology/cpu.rs",
-   "lines": 106,
+   "lines": 107,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 8
   },
   {
    "path": "./crates/inferenced-core/src/topology/drm/discover.rs",
-   "lines": 184,
+   "lines": 231,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 1
@@ -264,7 +264,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/topology/drm/nvidia_proc.rs",
-   "lines": 159,
+   "lines": 166,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 2
@@ -292,7 +292,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/topology/npu.rs",
-   "lines": 57,
+   "lines": 59,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 2
@@ -313,7 +313,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/topology/types.rs",
-   "lines": 205,
+   "lines": 223,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 8
