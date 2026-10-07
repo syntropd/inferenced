@@ -59,6 +59,7 @@ SyslogIdentifier=inferenced
 # Crash Diagnostics & systemd-coredump
 LimitCORE=infinity
 Environment=RUST_BACKTRACE=1
+Environment="PATH=/usr/lib/syntrop/bin:/usr/local/bin:/usr/bin:/bin"
 
 [Install]
 WantedBy=multi-user.target

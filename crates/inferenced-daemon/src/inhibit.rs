@@ -55,9 +55,7 @@ impl InhibitorManager {
             let p = PathBuf::from(rt).join("systemd-inferenced");
             let _ = std::fs::create_dir_all(&p);
             p.join("inhibit.lock")
-        } else {
-            std::env::temp_dir().join("systemd-inferenced-inhibit.lock")
-        }
+        } else { std::env::temp_dir().join("systemd-inferenced-inhibit.lock") }
     }
 
     pub async fn on_lease_acquired(&self) {
@@ -88,17 +86,22 @@ impl InhibitorManager {
         let mut lock = self.active_handle.lock().await;
         if lock.is_some() { return; }
         if !self.prefer_standalone {
-            debug!("Attempting systemd-inhibit sleep:idle delay lock");
-            if let Ok(child) = tokio::process::Command::new("systemd-inhibit")
-                .args(["--what=sleep:idle", "--who=systemd-inferenced",
+            debug!("Attempting systemd-inhibit sleep delay lock");
+            if let Ok(mut child) = tokio::process::Command::new("systemd-inhibit")
+                .args(["--what=sleep", "--who=systemd-inferenced",
                        "--why=Active AI model inference lease executing",
                        "--mode=delay", "sleep", "infinity"])
                 .spawn()
             {
-                *lock = Some(InhibitHandle::SystemdInhibit(child));
-                self.is_inhibited.store(true, Ordering::SeqCst);
-                info!("Acquired host sleep:idle lock via systemd-inhibit");
-                return;
+                tokio::time::sleep(tokio::time::Duration::from_millis(20)).await;
+                if let Ok(Some(st)) = child.try_wait() {
+                    warn!("systemd-inhibit exited prematurely ({st}); using flock fallback");
+                } else {
+                    *lock = Some(InhibitHandle::SystemdInhibit(child));
+                    self.is_inhibited.store(true, Ordering::SeqCst);
+                    info!("Acquired host sleep lock via systemd-inhibit");
+                    return;
+                }
             }
             warn!("systemd-inhibit unavailable; falling back to standalone flock");
         }
@@ -169,7 +172,7 @@ impl InhibitorManager {
                 }
             }
             self.is_inhibited.store(false, Ordering::SeqCst);
-            info!("Released sleep:idle inhibitor lock");
+            info!("Released sleep inhibitor lock");
         }
     }
 
@@ -193,14 +196,10 @@ mod tests {
     async fn test_inhibitor_reference_counting() {
         let m = InhibitorManager::new();
         assert_eq!(m.active_lease_count(), 0);
-        m.on_lease_acquired().await;
-        assert_eq!(m.active_lease_count(), 1);
-        m.on_lease_acquired().await;
-        assert_eq!(m.active_lease_count(), 2);
-        m.on_lease_released().await;
-        assert_eq!(m.active_lease_count(), 1);
-        m.on_lease_released().await;
-        assert_eq!(m.active_lease_count(), 0);
+        m.on_lease_acquired().await; assert_eq!(m.active_lease_count(), 1);
+        m.on_lease_acquired().await; assert_eq!(m.active_lease_count(), 2);
+        m.on_lease_released().await; assert_eq!(m.active_lease_count(), 1);
+        m.on_lease_released().await; assert_eq!(m.active_lease_count(), 0);
     }
 
     #[tokio::test]

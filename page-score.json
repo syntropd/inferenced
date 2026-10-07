@@ -1,7 +1,7 @@
 {
  "repo": "inferenced",
- "rev": "cac216d",
- "dirty": false,
+ "rev": "b8b7e14",
+ "dirty": true,
  "pages": [
   {
    "path": "./crates/inferenced-core/src/error.rs",
@@ -117,7 +117,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/reclaim/freezer.rs",
-   "lines": 100,
+   "lines": 105,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 6
@@ -180,7 +180,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/schedule/slice_preempt.rs",
-   "lines": 167,
+   "lines": 174,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 2
@@ -215,7 +215,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/tests/preempt_tests.rs",
-   "lines": 170,
+   "lines": 224,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
@@ -383,7 +383,7 @@
   },
   {
    "path": "./crates/inferenced-daemon/src/inhibit.rs",
-   "lines": 254,
+   "lines": 253,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 1
@@ -418,7 +418,7 @@
   },
   {
    "path": "./crates/inferenced-daemon/src/varlink/composite_leases.rs",
-   "lines": 195,
+   "lines": 200,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 1
@@ -439,7 +439,7 @@
   },
   {
    "path": "./crates/inferenced-daemon/src/varlink/leases.rs",
-   "lines": 180,
+   "lines": 185,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 1

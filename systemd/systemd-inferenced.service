@@ -59,6 +59,7 @@ SyslogIdentifier=systemd-inferenced
 # Crash Diagnostics & systemd-coredump
 LimitCORE=infinity
 Environment=RUST_BACKTRACE=1
+Environment="PATH=/usr/lib/syntrop/bin:/usr/local/bin:/usr/bin:/bin"
 
 # Encrypted Secrets & systemd-creds
 # Decrypted secrets from LoadCredential/LoadCredentialEncrypted appear in $CREDENTIALS_DIRECTORY
