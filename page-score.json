@@ -1,7 +1,7 @@
 {
  "repo": "inferenced",
- "rev": "b8b7e14",
- "dirty": true,
+ "rev": "effc378",
+ "dirty": false,
  "pages": [
   {
    "path": "./crates/inferenced-core/src/error.rs",
