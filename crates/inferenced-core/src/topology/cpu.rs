@@ -102,5 +102,6 @@ pub fn build_cpu_plane(cpuinfo_path: &str, avail_ram: u64) -> ComputePlane {
         hardware_features: features,
         p2p_links: None,
         kernel_used_memory: 0,
+        accelerator_capabilities: None,
     }
 }

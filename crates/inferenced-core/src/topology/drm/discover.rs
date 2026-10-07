@@ -3,7 +3,7 @@
 use super::nvidia_proc::scan_nvidia_proc;
 use super::nvidia_smi::query_nvidia_smi;
 use super::sysfs::{compute_pcie_bandwidth, inspect_drm_sysfs};
-use crate::topology::types::{ComputePlane, ComputePlaneKind};
+use crate::topology::types::{AcceleratorCapabilities, ComputePlane, ComputePlaneKind};
 use std::fs;
 use std::path::Path;
 
@@ -54,6 +54,45 @@ pub fn discover_drm_planes(
                         }
                     }
 
+                    let caps = if vendor_name.contains("AMD") {
+                        features.extend(["rocm".into(), "hip".into(), "amdgpu".into(), "vulkan".into(), "vulkan-compute".into()]);
+                        if is_integrated { features.push("apu-unified-memory".into()); }
+                        Some(AcceleratorCapabilities {
+                            backend: if is_integrated { "rocm-apu".into() } else { "rocm".into() },
+                            api_version: Some("6.2".into()),
+                            compute_units: None,
+                            structured_features: vec!["rocm".into(), "hip".into(), "vulkan".into(), "matrix-cores".into()],
+                            supports_cooperative_matrix: true,
+                        })
+                    } else if vendor_name.contains("Intel") {
+                        features.extend(["level-zero".into(), "oneapi".into(), "intel-arc".into(), "vulkan".into(), "vulkan-compute".into()]);
+                        Some(AcceleratorCapabilities {
+                            backend: "level-zero".into(),
+                            api_version: Some("1.3".into()),
+                            compute_units: None,
+                            structured_features: vec!["level-zero".into(), "oneapi".into(), "vulkan".into(), "xmx".into()],
+                            supports_cooperative_matrix: true,
+                        })
+                    } else if vendor_name.contains("NVIDIA") {
+                        features.extend(["cuda".into(), "vulkan".into(), "vulkan-compute".into()]);
+                        Some(AcceleratorCapabilities {
+                            backend: "cuda".into(),
+                            api_version: Some("12.0".into()),
+                            compute_units: None,
+                            structured_features: vec!["cuda".into(), "tensor-cores".into(), "vulkan".into()],
+                            supports_cooperative_matrix: true,
+                        })
+                    } else {
+                        features.extend(["vulkan".into(), "vulkan-compute".into()]);
+                        Some(AcceleratorCapabilities {
+                            backend: "vulkan".into(),
+                            api_version: Some("1.3".into()),
+                            compute_units: None,
+                            structured_features: vec!["vulkan".into(), "vulkan-spirv".into()],
+                            supports_cooperative_matrix: false,
+                        })
+                    };
+
                     planes.push(ComputePlane {
                         id: format!("drm-{}", fname),
                         name: format!("{} ({})", vendor_name, fname),
@@ -74,6 +113,7 @@ pub fn discover_drm_planes(
                         hardware_features: features,
                         p2p_links: None,
                         kernel_used_memory: vram_used,
+                        accelerator_capabilities: caps,
                     });
                 }
             }
@@ -160,6 +200,13 @@ pub fn discover_drm_planes(
                 hardware_features: feats,
                 p2p_links: None,
                 kernel_used_memory: 0,
+                accelerator_capabilities: Some(AcceleratorCapabilities {
+                    backend: "cuda".into(),
+                    api_version: Some("12.0".into()),
+                    compute_units: None,
+                    structured_features: vec!["cuda".into(), "nvml".into(), "vulkan".into()],
+                    supports_cooperative_matrix: true,
+                }),
             });
         }
     }

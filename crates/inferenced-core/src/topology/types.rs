@@ -34,6 +34,15 @@ pub struct DeviceLink {
     pub latency_nanos: u64,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AcceleratorCapabilities {
+    pub backend: String,
+    pub api_version: Option<String>,
+    pub compute_units: Option<u32>,
+    pub structured_features: Vec<String>,
+    pub supports_cooperative_matrix: bool,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComputePlane {
     pub id: String,
@@ -51,6 +60,8 @@ pub struct ComputePlane {
     pub p2p_links: Option<Vec<DeviceLink>>,
     #[serde(default)]
     pub kernel_used_memory: u64,
+    #[serde(default)]
+    pub accelerator_capabilities: Option<AcceleratorCapabilities>,
 }
 
 impl ComputePlane {
@@ -75,6 +86,7 @@ pub struct ComputePlaneBuilder {
     hardware_features: Vec<String>,
     p2p_links: Option<Vec<DeviceLink>>,
     kernel_used_memory: u64,
+    accelerator_capabilities: Option<AcceleratorCapabilities>,
 }
 
 impl ComputePlaneBuilder {
@@ -93,6 +105,7 @@ impl ComputePlaneBuilder {
             hardware_features: vec!["cuda".to_string(), "flash-attn".to_string()],
             p2p_links: None,
             kernel_used_memory: 0,
+            accelerator_capabilities: None,
         }
     }
 
@@ -109,6 +122,10 @@ impl ComputePlaneBuilder {
     pub fn hardware_features(mut self, features: Vec<String>) -> Self { self.hardware_features = features; self }
     pub fn p2p_links(mut self, links: Option<Vec<DeviceLink>>) -> Self { self.p2p_links = links; self }
     pub fn kernel_used_memory(mut self, bytes: u64) -> Self { self.kernel_used_memory = bytes; self }
+    pub fn accelerator_capabilities(mut self, caps: AcceleratorCapabilities) -> Self {
+        self.accelerator_capabilities = Some(caps);
+        self
+    }
 
     pub fn build(self) -> ComputePlane {
         let name = self.name.unwrap_or_else(|| format!("Plane {}", self.id));
@@ -128,6 +145,7 @@ impl ComputePlaneBuilder {
             hardware_features: self.hardware_features,
             p2p_links: self.p2p_links,
             kernel_used_memory: self.kernel_used_memory,
+            accelerator_capabilities: self.accelerator_capabilities,
         }
     }
 }

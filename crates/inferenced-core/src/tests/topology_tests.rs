@@ -95,3 +95,65 @@ fn test_triage_enclave_assignment_and_quota() {
     assert!(!planes[0].is_triage_reserved);
     assert_eq!(planes[0].available_memory_bytes, 6 * 1024 * 1024 * 1024);
 }
+
+#[tokio::test]
+async fn test_rocm_arc_vulkan_discovery_and_lease() {
+    let dir = tempdir().unwrap();
+    let dri_dir = dir.path().join("dri");
+    let sysfs_dir = dir.path().join("sysfs");
+    fs::create_dir_all(&dri_dir).unwrap();
+    fs::write(dri_dir.join("renderD128"), "").unwrap();
+    fs::write(dri_dir.join("renderD129"), "").unwrap();
+
+    let card128_dev = sysfs_dir.join("renderD128/device");
+    fs::create_dir_all(&card128_dev).unwrap();
+    fs::write(card128_dev.join("vendor"), "0x1002\n").unwrap();
+    fs::write(card128_dev.join("mem_info_vram_total"), "17179869184\n").unwrap(); // 16GB AMD dGPU
+
+    let card129_dev = sysfs_dir.join("renderD129/device");
+    fs::create_dir_all(&card129_dev).unwrap();
+    fs::write(card129_dev.join("vendor"), "0x8086\n").unwrap();
+    fs::write(card129_dev.join("mem_info_vram_total"), "17179869184\n").unwrap(); // 16GB Intel Arc
+
+    let planes = drm::discover_drm_planes(
+        dri_dir.to_str().unwrap(),
+        sysfs_dir.to_str().unwrap(),
+        32 * 1024 * 1024 * 1024,
+        16 * 1024 * 1024 * 1024,
+    );
+
+    let amd_plane = planes.iter().find(|p| p.id == "drm-renderD128").unwrap();
+    assert!(amd_plane.hardware_features.contains(&"rocm".to_string()));
+    assert!(amd_plane.hardware_features.contains(&"vulkan-compute".to_string()));
+    let amd_caps = amd_plane.accelerator_capabilities.as_ref().unwrap();
+    assert_eq!(amd_caps.backend, "rocm");
+    assert!(amd_caps.supports_cooperative_matrix);
+
+    let arc_plane = planes.iter().find(|p| p.id == "drm-renderD129").unwrap();
+    assert!(arc_plane.hardware_features.contains(&"level-zero".to_string()));
+    assert!(arc_plane.hardware_features.contains(&"intel-arc".to_string()));
+    let arc_caps = arc_plane.accelerator_capabilities.as_ref().unwrap();
+    assert_eq!(arc_caps.backend, "level-zero");
+
+    let mut topo = HardwareTopology::default();
+    topo.planes = planes;
+
+    let arb = crate::arbiter::Arbiter::new(topo);
+    let rocm_lease = arb.acquire_lease(
+        crate::lease::LeasePriority::Interactive,
+        1024 * 1024 * 1024,
+        Some("rocm".into()),
+        None,
+        None,
+    ).await.unwrap();
+    assert_eq!(rocm_lease.plane_id, "drm-renderD128");
+
+    let arc_lease = arb.acquire_lease(
+        crate::lease::LeasePriority::Interactive,
+        1024 * 1024 * 1024,
+        Some("level-zero".into()),
+        None,
+        None,
+    ).await.unwrap();
+    assert_eq!(arc_lease.plane_id, "drm-renderD129");
+}

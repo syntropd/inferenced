@@ -135,6 +135,13 @@ pub fn scan_nvidia_proc(
                 hardware_features: feats,
                 p2p_links: None,
                 kernel_used_memory: 0,
+                accelerator_capabilities: Some(crate::topology::types::AcceleratorCapabilities {
+                    backend: "cuda".into(),
+                    api_version: Some("12.0".into()),
+                    compute_units: None,
+                    structured_features: vec!["cuda".into(), "nvml".into(), "vulkan".into()],
+                    supports_cooperative_matrix: true,
+                }),
             });
         }
     }
