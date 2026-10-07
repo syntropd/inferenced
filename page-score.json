@@ -1,6 +1,6 @@
 {
  "repo": "inferenced",
- "rev": "b8eaa58",
+ "rev": "f0044e5",
  "dirty": false,
  "pages": [
   {
@@ -159,7 +159,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/schedule/gang_scheduler.rs",
-   "lines": 236,
+   "lines": 240,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 1
