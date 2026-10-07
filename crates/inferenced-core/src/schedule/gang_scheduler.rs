@@ -41,13 +41,17 @@ pub fn select_plane_for_single(
     topology: &HardwareTopology, priority: LeasePriority, preferred_plane: Option<&str>,
 ) -> Result<usize> {
     if let Some(pref) = preferred_plane {
-        topology.planes.iter().position(|p| {
-            p.id == pref
-                || p.hardware_features.iter().any(|f| f.eq_ignore_ascii_case(pref))
-                || p.name.to_lowercase().contains(&pref.to_lowercase())
-                || p.accelerator_capabilities.as_ref().is_some_and(|c| c.backend.eq_ignore_ascii_case(pref))
-        })
-        .ok_or_else(|| Error::PlaneNotFound(pref.to_string()))
+        topology.planes.iter().position(|p| p.id == pref)
+            .or_else(|| topology.planes.iter().position(|p| {
+                p.accelerator_capabilities.as_ref().is_some_and(|c| c.backend.eq_ignore_ascii_case(pref))
+            }))
+            .or_else(|| topology.planes.iter().position(|p| {
+                p.hardware_features.iter().any(|f| f.eq_ignore_ascii_case(pref))
+            }))
+            .or_else(|| topology.planes.iter().position(|p| {
+                p.name.to_lowercase().contains(&pref.to_lowercase())
+            }))
+            .ok_or_else(|| Error::PlaneNotFound(pref.to_string()))
     } else if priority == LeasePriority::EmergencyTriage {
         topology.planes.iter().position(|p| p.is_triage_reserved)
             .or_else(|| topology.planes.iter().position(|p| p.kind == ComputePlaneKind::CpuMatrixExtension))
