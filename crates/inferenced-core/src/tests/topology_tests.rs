@@ -104,6 +104,7 @@ async fn test_rocm_arc_vulkan_discovery_and_lease() {
     fs::create_dir_all(&dri_dir).unwrap();
     fs::write(dri_dir.join("renderD128"), "").unwrap();
     fs::write(dri_dir.join("renderD129"), "").unwrap();
+    fs::write(dri_dir.join("renderD130"), "").unwrap();
 
     let card128_dev = sysfs_dir.join("renderD128/device");
     fs::create_dir_all(&card128_dev).unwrap();
@@ -114,6 +115,11 @@ async fn test_rocm_arc_vulkan_discovery_and_lease() {
     fs::create_dir_all(&card129_dev).unwrap();
     fs::write(card129_dev.join("vendor"), "0x8086\n").unwrap();
     fs::write(card129_dev.join("mem_info_vram_total"), "17179869184\n").unwrap(); // 16GB Intel Arc
+
+    let card130_dev = sysfs_dir.join("renderD130/device");
+    fs::create_dir_all(&card130_dev).unwrap();
+    fs::write(card130_dev.join("vendor"), "0x13b5\n").unwrap();
+    fs::write(card130_dev.join("mem_info_vram_total"), "8589934592\n").unwrap(); // 8GB Vulkan
 
     let planes = drm::discover_drm_planes(
         dri_dir.to_str().unwrap(),
@@ -135,6 +141,11 @@ async fn test_rocm_arc_vulkan_discovery_and_lease() {
     let arc_caps = arc_plane.accelerator_capabilities.as_ref().unwrap();
     assert_eq!(arc_caps.backend, "level-zero");
 
+    let vulkan_plane = planes.iter().find(|p| p.id == "drm-renderD130").unwrap();
+    assert!(vulkan_plane.hardware_features.contains(&"vulkan".to_string()));
+    let vulkan_caps = vulkan_plane.accelerator_capabilities.as_ref().unwrap();
+    assert_eq!(vulkan_caps.backend, "vulkan");
+
     let topo = HardwareTopology { planes, ..Default::default() };
 
     let arb = crate::arbiter::Arbiter::new(topo);
@@ -155,4 +166,13 @@ async fn test_rocm_arc_vulkan_discovery_and_lease() {
         None,
     ).await.unwrap();
     assert_eq!(arc_lease.plane_id, "drm-renderD129");
+
+    let vulkan_lease = arb.acquire_lease(
+        crate::lease::LeasePriority::Interactive,
+        1024 * 1024 * 1024,
+        Some("vulkan".into()),
+        None,
+        None,
+    ).await.unwrap();
+    assert_eq!(vulkan_lease.plane_id, "drm-renderD130");
 }
