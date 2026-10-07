@@ -1,7 +1,7 @@
 {
  "repo": "inferenced",
- "rev": "f6e9611",
- "dirty": true,
+ "rev": "b8eaa58",
+ "dirty": false,
  "pages": [
   {
    "path": "./crates/inferenced-core/src/error.rs",
@@ -229,7 +229,7 @@
   },
   {
    "path": "./crates/inferenced-core/src/tests/topology_tests.rs",
-   "lines": 158,
+   "lines": 178,
    "bin_bytes": null,
    "heat_pct": null,
    "reach": 0
