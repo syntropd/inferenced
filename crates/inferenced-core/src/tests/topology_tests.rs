@@ -135,8 +135,7 @@ async fn test_rocm_arc_vulkan_discovery_and_lease() {
     let arc_caps = arc_plane.accelerator_capabilities.as_ref().unwrap();
     assert_eq!(arc_caps.backend, "level-zero");
 
-    let mut topo = HardwareTopology::default();
-    topo.planes = planes;
+    let topo = HardwareTopology { planes, ..Default::default() };
 
     let arb = crate::arbiter::Arbiter::new(topo);
     let rocm_lease = arb.acquire_lease(
